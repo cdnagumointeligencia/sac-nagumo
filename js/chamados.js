@@ -377,7 +377,7 @@ async function criarNotaDevAutomatica(chamado) {
     statusNf: 'Aguardando',
     observacao: ''
   };
-  var criado = await fbDocCreate('notasDevolucao', naturalId, novaNota, { cd: cdAtual, mesNome: mesAtual });
+  var criado = await fbDocCreate('notasDevolucao', naturalId, novaNota, { cd: cdAtual, ano: new Date().getFullYear(), mesNome: mesAtual });
   if (!criado) {
     toast('Nota de devolu\u00e7\u00e3o j\u00e1 existe no sistema (criada por outro usu\u00e1rio)', 'error');
     return;
