@@ -75,39 +75,50 @@ async function redefinirSenha(nome) {
     toast('Digite uma nova senha', 'error');
     return;
   }
-  const u = todosUsuarios.find(u => u.nome === nome);
+  const u = todosUsuarios.find(function (u) { return u.nome === nome; });
   if (u) {
     u.senhaHash = await hashSenha(novaSenha);
     delete u.senha;
-    await salvarTodosUsuarios();
+    _isSavingUsuarios = true;
+    var docId = 'usr_' + nome;
+    await fbDocSet('usuarios', docId, { nome: nome, ativo: u.ativo, admin: u.admin === true, senhaHash: u.senhaHash });
+    var novaLista = todosUsuarios.slice();
+    lsSetShared('SAC_USUARIOS', novaLista);
+    lsSet('usuarios', novaLista);
+    _isSavingUsuarios = false;
     input.value = '';
     atualizarListaUsuarios();
-    toast(`Senha de ${nome} alterada`, 'success');
+    toast('Senha de ' + nome + ' alterada', 'success');
   }
 }
 
 async function adicionarUsuario() {
-  const nome = document.getElementById('novoUsuario').value.trim();
-  const senha = document.getElementById('novaSenhaUsuario').value.trim() || SENHA_PADRAO;
+  var nome = document.getElementById('novoUsuario').value.trim();
+  var senha = document.getElementById('novaSenhaUsuario').value.trim() || SENHA_PADRAO;
   if (!nome) return;
-  if (todosUsuarios.some(u => u.nome === nome)) {
+  if (todosUsuarios.some(function (u) { return u.nome === nome; })) {
     toast('Usuário já existe', 'error');
     return;
   }
-  const senhaHash = await hashSenha(senha);
-  todosUsuarios.push({ nome, ativo: true, senhaHash });
-  todosUsuarios.sort((a, b) => a.nome.localeCompare(b.nome));
+  var senhaHash = await hashSenha(senha);
+  var novoUser = { nome: nome, ativo: true, senhaHash: senhaHash };
+  _isSavingUsuarios = true;
+  var docId = 'usr_' + nome;
+  await fbDocSet('usuarios', docId, { nome: nome, ativo: true, admin: false, senhaHash: senhaHash });
+  if (!todosUsuarios.some(function (u) { return u.nome === nome; })) {
+    todosUsuarios.push(novoUser);
+    todosUsuarios.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+  }
+  var novaLista = todosUsuarios.slice();
+  lsSetShared('SAC_USUARIOS', novaLista);
+  lsSet('usuarios', novaLista);
+  _isSavingUsuarios = false;
   document.getElementById('novoUsuario').value = '';
   document.getElementById('novaSenhaUsuario').value = SENHA_PADRAO;
-  await salvarTodosUsuarios();
-  if (!todosUsuarios.some(u => u.nome === nome)) {
-    todosUsuarios.push({ nome, ativo: true, senhaHash });
-    todosUsuarios.sort((a, b) => a.nome.localeCompare(b.nome));
-  }
-  usuarios = todosUsuarios.filter(u => u.ativo).map(u => u.nome);
+  usuarios = todosUsuarios.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
   atualizarListaUsuarios();
   popularSelectLogin();
-  toast(`${nome} adicionado`, 'success');
+  toast(nome + ' adicionado', 'success');
 }
 
 async function toggleUsuario(nome) {
@@ -115,15 +126,20 @@ async function toggleUsuario(nome) {
     toast('Não é possível desativar o usuário admin', 'error');
     return;
   }
-  const u = todosUsuarios.find(u => u.nome === nome);
-  if (u) {
-    u.ativo = !u.ativo;
-    await salvarTodosUsuarios();
-    usuarios = todosUsuarios.filter(u => u.ativo).map(u => u.nome);
-    atualizarListaUsuarios();
-    renderizarTabela();
-    toast(`${nome} ${u.ativo ? 'reativado' : 'desativado'}`, 'success');
-  }
+  var u = todosUsuarios.find(function (u) { return u.nome === nome; });
+  if (!u) return;
+  u.ativo = !u.ativo;
+  _isSavingUsuarios = true;
+  var docId = 'usr_' + nome;
+  await fbDocSet('usuarios', docId, { nome: nome, ativo: u.ativo, admin: u.admin === true, senhaHash: u.senhaHash || '' });
+  var novaLista = todosUsuarios.slice();
+  lsSetShared('SAC_USUARIOS', novaLista);
+  lsSet('usuarios', novaLista);
+  _isSavingUsuarios = false;
+  usuarios = todosUsuarios.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
+  atualizarListaUsuarios();
+  renderizarTabela();
+  toast(nome + ' ' + (u.ativo ? 'reativado' : 'desativado'), 'success');
 }
 
 async function excluirUsuario(nome) {
@@ -131,14 +147,26 @@ async function excluirUsuario(nome) {
     toast('Não é possível excluir o usuário admin', 'error');
     return;
   }
-  if (!confirm(`Excluir permanentemente ${nome}?`)) return;
-  const idx = todosUsuarios.findIndex(u => u.nome === nome);
+  if (!confirm('Excluir permanentemente ' + nome + '?')) return;
+  _isSavingUsuarios = true;
+  var docId = 'usr_' + nome;
+  if (typeof fbDisponivel === 'undefined' || fbDisponivel()) {
+    try {
+      await fbDb.collection('usuarios').doc(docId).delete();
+    } catch (e) {
+      /* doc pode já não existir */
+    }
+  }
+  var idx = todosUsuarios.findIndex(function (u) { return u.nome === nome; });
   if (idx !== -1) {
     todosUsuarios.splice(idx, 1);
-    await salvarTodosUsuarios();
-    usuarios = todosUsuarios.filter(u => u.ativo).map(u => u.nome);
-    atualizarListaUsuarios();
-    renderizarTabela();
-    toast(`${nome} excluído`, 'success');
   }
+  var novaLista = todosUsuarios.slice();
+  lsSetShared('SAC_USUARIOS', novaLista);
+  lsSet('usuarios', novaLista);
+  _isSavingUsuarios = false;
+  usuarios = todosUsuarios.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
+  atualizarListaUsuarios();
+  renderizarTabela();
+  toast(nome + ' excluído', 'success');
 }

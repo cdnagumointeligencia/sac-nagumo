@@ -423,6 +423,7 @@ function configurarSnapshots() {
     if (data && data.dados) divergenciasCustom = data.dados;
   });
   fbOnSnapshot('usuarios', [], function (results) {
+    if (_isSavingUsuarios) return;
     if (results && results.length > 0) {
       todosUsuarios = results;
       usuarios = todosUsuarios.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
@@ -599,13 +600,16 @@ async function carregarTudo() {
 }
 
 var _fbTimerChamados = null;
+var _isSavingUsuarios = false;
 
 async function salvarTodosUsuarios() {
+  _isSavingUsuarios = true;
   var snapshot = todosUsuarios.slice();
   lsSetShared('SAC_USUARIOS', snapshot);
   lsSet('usuarios', snapshot);
   await fbSalvarUsuarios();
   todosUsuarios = snapshot;
+  _isSavingUsuarios = false;
 }
 
 async function salvarDadosMes() {
