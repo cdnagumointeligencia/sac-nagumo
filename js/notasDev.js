@@ -17,7 +17,7 @@ async function carregarNotasDev() {
 async function salvarNotasDev() {
   lsSetCd('NOTAS_DEV_dados', dadosNotasDev);
   clearTimeout(_fbTimerNotas);
-  _fbTimerNotas = setTimeout(function () { fbSalvarColecao('notasDevolucao', dadosNotasDev); }, 3000);
+  _fbTimerNotas = setTimeout(function () { fbSalvarColecao('notasDevolucao', dadosNotasDev); }, 500);
 }
 
 function renderizarNotasDevolucao() {

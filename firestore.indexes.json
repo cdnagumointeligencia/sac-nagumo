@@ -1,0 +1,50 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "chamados",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cd", "order": "ASCENDING" },
+        { "fieldPath": "ano", "order": "ASCENDING" },
+        { "fieldPath": "ativo", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "senhasSac",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cd", "order": "ASCENDING" },
+        { "fieldPath": "ano", "order": "ASCENDING" },
+        { "fieldPath": "ativo", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notasDevolucao",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cd", "order": "ASCENDING" },
+        { "fieldPath": "ano", "order": "ASCENDING" },
+        { "fieldPath": "ativo", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "mercadoriasNF",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cd", "order": "ASCENDING" },
+        { "fieldPath": "ano", "order": "ASCENDING" },
+        { "fieldPath": "ativo", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "produtividade",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cd", "order": "ASCENDING" },
+        { "fieldPath": "ano", "order": "ASCENDING" },
+        { "fieldPath": "ativo", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -17,7 +17,7 @@ async function carregarProdutividade() {
 async function salvarProdutividade() {
   lsSetCd('PRODUTIVIDADE_dados', dadosProdutividade);
   clearTimeout(_fbTimerProd);
-  _fbTimerProd = setTimeout(function () { fbSalvarColecao('produtividade', dadosProdutividade); }, 3000);
+  _fbTimerProd = setTimeout(function () { fbSalvarColecao('produtividade', dadosProdutividade); }, 500);
 }
 
 function getDataSelecionada() {

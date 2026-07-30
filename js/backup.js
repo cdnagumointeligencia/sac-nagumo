@@ -128,10 +128,21 @@ async function exportarBackupCompleto() {
   let usuariosData = [];
   try { usuariosData = JSON.parse(localStorage.getItem('SAC_USUARIOS')) || []; } catch {}
 
+  var agorats = new Date().toISOString();
+  var timestampsPorColecao = {
+    chamados: agorats,
+    senhasSac: agorats,
+    notasDevolucao: agorats,
+    mercadoriasNF: agorats,
+    produtividade: agorats,
+    usuarios: agorats
+  };
+
   const backup = {
     versao: 3,
     cd: cdAtual,
-    dataBackup: new Date().toISOString(),
+    dataBackup: agorats,
+    timestampsPorColecao: timestampsPorColecao,
     usuarios: usuariosData,
     dados: dadosCD,
     senhasSac: senhasSac,
@@ -180,7 +191,20 @@ async function importarBackupCompletoFile() {
       else if (isV2) dadosBackupArr = [...(backup.dadosCD1 || []), ...(backup.dadosCD2 || [])];
       else dadosBackupArr = Object.entries(backup.dados || {}).map(([mes, regs]) => ({ mes, registros: normalizarRegistros(regs) }));
 
-      if (backup.versao === 3 && backup.dataBackup) {
+      if (backup.versao === 3 && backup.timestampsPorColecao) {
+        var colecoesAntigas = [];
+        for (var colecao in backup.timestampsPorColecao) {
+          var tsBackup = new Date(backup.timestampsPorColecao[colecao]);
+          var diasAtras = (new Date() - tsBackup) / 86400000;
+          if (diasAtras > 90) {
+            colecoesAntigas.push(colecao + ' (' + Math.round(diasAtras) + 'd)');
+          }
+        }
+        if (colecoesAntigas.length > 0) {
+          var confirma = confirm('Cole\u00e7\u00f5es com mais de 90 dias: ' + colecoesAntigas.join(', ') + '. Deseja importar mesmo assim?');
+          if (!confirma) { document.getElementById('jsonInput').value = ''; return; }
+        }
+      } else if (backup.versao === 3 && backup.dataBackup) {
         var dataBackup = new Date(backup.dataBackup);
         var diasAtras = (new Date() - dataBackup) / 86400000;
         if (diasAtras > 90) {

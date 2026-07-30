@@ -307,6 +307,21 @@ async function validarLogin() {
   await iniciarSistema();
 }
 
+var _sessaoMem = null;
+
+function _ssSet(chave, valor) {
+  try { sessionStorage.setItem(chave, JSON.stringify(valor)); } catch (e) { _sessaoMem = valor; }
+}
+
+function _ssGet(chave) {
+  try { return JSON.parse(sessionStorage.getItem(chave)); } catch { return _sessaoMem; }
+  return null;
+}
+
+function _ssRemove(chave) {
+  try { sessionStorage.removeItem(chave); } catch { _sessaoMem = null; }
+}
+
 function sessaoLogin(nome, cd) {
   const sessao = {
     nome: nome,
@@ -314,32 +329,32 @@ function sessaoLogin(nome, cd) {
     timestamp: new Date().toISOString(),
     expiraEm: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
   };
-  localStorage.setItem('SAC_sessao', JSON.stringify(sessao));
+  _ssSet('SAC_sessao', sessao);
   usuarioLogado = nome;
 }
 
 function verificarSessao() {
-  let raw = localStorage.getItem('SAC_sessao');
+  let raw = _ssGet('SAC_sessao');
   if (!raw) return null;
 
   try {
-    const sessao = JSON.parse(raw);
+    const sessao = raw;
     const agora = new Date();
     const expira = new Date(sessao.expiraEm);
     if (agora > expira) {
-      localStorage.removeItem('SAC_sessao');
+      _ssRemove('SAC_sessao');
       return null;
     }
     return { nome: sessao.nome, cd: sessao.cd || 'CD1' };
   } catch {
-    localStorage.removeItem('SAC_sessao');
+    _ssRemove('SAC_sessao');
     return null;
   }
 }
 
 function logout() {
   fbPararSnapshots();
-  localStorage.removeItem('SAC_sessao');
+  _ssRemove('SAC_sessao');
   usuarioLogado = null;
   telaLogin();
 }
@@ -599,7 +614,7 @@ async function salvarDadosMes() {
   if (idx >= 0) lsDados[idx] = registro; else lsDados.push(registro);
   lsSet('dados', lsDados);
   clearTimeout(_fbTimerChamados);
-  _fbTimerChamados = setTimeout(fbSalvarChamados, 3000);
+  _fbTimerChamados = setTimeout(fbSalvarChamados, 500);
 }
 
 // ==================== FILTROS ====================

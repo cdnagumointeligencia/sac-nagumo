@@ -181,7 +181,8 @@ var _snapMerc = null;
 var _snapProd = null;
 
 function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
-  var conditions = [['cd', '==', cdAtual], ['ativo', '==', true]];
+  var ano = new Date().getFullYear();
+  var conditions = [['cd', '==', cdAtual], ['ano', '==', ano], ['ativo', '==', true]];
   if (extraConditions) conditions = conditions.concat(extraConditions);
 
   return fbOnSnapshot(colecao, conditions, function (resultados) {
@@ -214,8 +215,10 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
 
 async function fbCarregarColecao(colecao, alvo) {
   if (!fbDisponivel() || !cdAtual) return false;
+  var ano = new Date().getFullYear();
   var resultados = await fbQuery(colecao, [
     ['cd', '==', cdAtual],
+    ['ano', '==', ano],
     ['ativo', '==', true]
   ]);
   if (!resultados || resultados.length === 0) return false;
@@ -242,56 +245,13 @@ async function fbSalvarColecao(colecao, alvo, extra) {
     var item = alvo[i];
     var docId = item.id || item.firestoreId || gerarId();
     if (!item.id) item.id = docId;
-    await fbDocSet(colecao, docId, item, { cd: cdAtual, mesNome: mesAtual });
+    await fbDocSet(colecao, docId, item, { cd: cdAtual, ano: new Date().getFullYear(), mesNome: mesAtual });
   }
 }
 
 async function fbExcluirItemColecao(colecao, item) {
   var docId = item.id || item.firestoreId;
   await fbDocDelete(colecao, docId);
-}
-
-// ==================== PRODUTIVIDADE ====================
-async function fbCarregarProdutividade() {
-  if (!fbDisponivel()) return false;
-  var resultados = await fbQuery('produtividade', [
-    ['cd', '==', cdAtual],
-    ['ativo', '==', true]
-  ]);
-  if (!resultados || resultados.length === 0) return false;
-
-  dadosProdutividade = {};
-  resultados.forEach(function (r) {
-    var mesNome = r.mes || '';
-    if (mesNome && MESES.indexOf(mesNome) >= 0) {
-      dadosProdutividade[mesNome] = {
-        t1: r.t1 || 0,
-        t2: r.t2 || 0,
-        t3: r.t3 || 0
-      };
-    }
-  });
-  return true;
-}
-
-async function fbSalvarProdutividade() {
-  if (!fbDisponivel() || !cdAtual) return;
-  var ano = new Date().getFullYear();
-  for (var i = 0; i < MESES.length; i++) {
-    var mes = MESES[i];
-    var d = dadosProdutividade[mes];
-    if (!d) continue;
-    var docId = cdAtual + '_' + ano + '_' + mes;
-    await fbDocSet('produtividade', docId, {
-      mes: mes,
-      t1: d.t1 || 0,
-      t2: d.t2 || 0,
-      t3: d.t3 || 0
-    }, {
-      cd: cdAtual,
-      ano: ano
-    });
-  }
 }
 
 // ==================== FIELD-LEVEL UPDATE ====================

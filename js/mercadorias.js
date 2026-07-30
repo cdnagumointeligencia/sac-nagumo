@@ -20,7 +20,7 @@ async function carregarMercadoriasNF() {
 async function salvarMercadoriasNF() {
   lsSetCd('MERCADORIAS_NF_dados', dadosMercadoriasNF);
   clearTimeout(_fbTimerMerc);
-  _fbTimerMerc = setTimeout(function () { fbSalvarColecao('mercadoriasNF', dadosMercadoriasNF); }, 3000);
+  _fbTimerMerc = setTimeout(function () { fbSalvarColecao('mercadoriasNF', dadosMercadoriasNF); }, 500);
 }
 
 function selecionarMesMercadoriasNF(mes) {

@@ -280,15 +280,25 @@ function criarCelInput(type, value, label, idx, field) {
   if (field === 'chamado') {
     inp.onblur = async function () {
       if (inp.value.trim()) {
-        var localDup = dadosMes[mesAtual].some(function (d, i) { return i !== idx && d.chamado === inp.value.trim(); });
-        if (!localDup) {
-          var fbDup = await fbVerificarChamadoDuplicado(inp.value.trim(), cdAtual, mesAtual);
-          if (fbDup) { localDup = true; }
-        }
+        var chamadoNum = inp.value.trim();
+        var localDup = dadosMes[mesAtual].some(function (d, i) { return i !== idx && d.chamado === chamadoNum; });
         if (localDup) {
           toast('N\u00famero de chamado j\u00e1 existe no sistema!', 'error');
           inp.value = dadosMes[mesAtual][idx].chamado || '';
           return;
+        }
+        var naturalId = cdAtual + '_' + chamadoNum;
+        if (dadosMes[mesAtual][idx].id !== naturalId) {
+          var criado = await fbDocCreate('chamados', naturalId, {
+            id: naturalId, chamado: chamadoNum, loja: '', braco: '', turno: '',
+            setor: '', plu: '', divergencia: '', observacao: '', obsTexto: '',
+            conferente: '', usuario: usuarioLogado || '', dataAbertura: '', dataFechamento: ''
+          }, { cd: cdAtual, ano: anoAtual, mes: MESES.indexOf(mesAtual), mesNome: mesAtual });
+          if (!criado) {
+            inp.value = dadosMes[mesAtual][idx].chamado || '';
+            return;
+          }
+          dadosMes[mesAtual][idx].id = naturalId;
         }
       }
       salvar(true);
@@ -334,16 +344,18 @@ function criarCelSelect(options, value, idx, field) {
 }
 
 async function criarNotaDevAutomatica(chamado) {
-  var jaExiste = dadosNotasDev.some(function (n) { return n.chamado === chamado.chamado && n.loja === chamado.loja; });
-  if (!jaExiste) {
-    jaExiste = await fbVerificarNotaDevDuplicada(chamado.chamado, chamado.loja);
+  var naturalId = cdAtual + '_' + (chamado.chamado || '') + '_' + (chamado.loja || '');
+  if (!chamado.chamado || !chamado.loja) {
+    toast('Chamado e loja necess\u00e1rios para criar nota', 'error');
+    return;
   }
+  var jaExiste = dadosNotasDev.some(function (n) { return n.chamado === chamado.chamado && n.loja === chamado.loja; });
   if (jaExiste) {
-    toast('Nota de devolu\u00e7\u00e3o j\u00e1 existe para este chamado no sistema', 'error');
+    toast('Nota de devolu\u00e7\u00e3o j\u00e1 existe para este chamado', 'error');
     return;
   }
   const hoje = new Date().toISOString().split('T')[0];
-  dadosNotasDev.push({
+  var novaNota = {
     chamado: chamado.chamado || '',
     loja: chamado.loja || '',
     plu: chamado.plu || '',
@@ -352,8 +364,14 @@ async function criarNotaDevAutomatica(chamado) {
     usuario: chamado.usuario || '',
     statusNf: 'Aguardando',
     observacao: ''
-  });
-  garantirIds(dadosNotasDev);
+  };
+  var criado = await fbDocCreate('notasDevolucao', naturalId, novaNota, { cd: cdAtual, mesNome: mesAtual });
+  if (!criado) {
+    toast('Nota de devolu\u00e7\u00e3o j\u00e1 existe no sistema (criada por outro usu\u00e1rio)', 'error');
+    return;
+  }
+  novaNota.id = naturalId;
+  dadosNotasDev.push(novaNota);
   salvarNotasDev();
   toast('Nota de devolu\u00e7\u00e3o criada automaticamente!', 'success');
 }

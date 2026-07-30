@@ -1,11 +1,11 @@
 // ==================== FIREBASE INIT ====================
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBA7_8K_kTkW3vRzFPLLiN_TGSQ0Om9oNs",
+  apiKey: "AIzaSyCnLFg6nmZceNTofGgY9x61BbD1Pb4ugko",
   authDomain: "sac-nagumo.firebaseapp.com",
   projectId: "sac-nagumo",
   storageBucket: "sac-nagumo.firebasestorage.app",
-  messagingSenderId: "158692645615",
-  appId: "1:158692645615:web:293f154af1b5b2be914d2c"
+  messagingSenderId: "647170425279",
+  appId: "1:647170425279:web:82b83486c48708673a210a"
 };
 
 let fbDb = null;
@@ -26,6 +26,10 @@ function fbInit() {
       firebase.initializeApp(FIREBASE_CONFIG);
       fbDb = firebase.firestore();
       fbAuth = firebase.auth();
+
+      try {
+        fbAuth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      } catch (e) {}
 
       fbDb.enablePersistence({ synchronizeTabs: true }).catch(function (err) {
         if (err.code === 'failed-precondition') {
@@ -89,6 +93,23 @@ async function fbDocSet(colecao, id, data, extra) {
     await fbDb.collection(colecao).doc(id).set(fbDataComAuditoria(data, extra), { merge: true });
   } catch (err) {
     toast('Erro ao salvar: ' + err.message, 'error');
+  }
+}
+
+async function fbDocCreate(colecao, id, data, extra) {
+  if (!fbDisponivel()) return true;
+  try {
+    var ref = fbDb.collection(colecao).doc(id);
+    var snap = await ref.get();
+    if (snap.exists) {
+      toast('Registro duplicado: j\u00e1 existe no sistema!', 'error');
+      return false;
+    }
+    await ref.set(fbDataComAuditoria(data, extra));
+    return true;
+  } catch (err) {
+    toast('Erro ao criar: ' + err.message, 'error');
+    return false;
   }
 }
 

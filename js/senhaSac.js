@@ -17,7 +17,7 @@ async function carregarSenhasSac() {
 async function salvarSenhasSac() {
   lsSetCd('SENHAS_SAC_dados', dadosSenhasSac);
   clearTimeout(_fbTimerSenhas);
-  _fbTimerSenhas = setTimeout(function () { fbSalvarColecao('senhasSac', dadosSenhasSac); }, 3000);
+  _fbTimerSenhas = setTimeout(function () { fbSalvarColecao('senhasSac', dadosSenhasSac); }, 500);
 }
 
 function renderizarSenhasSac() {
