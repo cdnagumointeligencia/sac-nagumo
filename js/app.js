@@ -46,6 +46,7 @@ document.addEventListener('input', function(e) {
 // ==================== INICIAR ====================
 (async function() {
   try {
+    await fbInit();
     await carregarUsuarios();
     const sessao = verificarSessao();
     if (sessao && todosUsuarios.some(u => u.nome === sessao.nome && u.ativo)) {

@@ -13,36 +13,56 @@ let fbAuth = null;
 let fbUid = null;
 let fbInicializado = false;
 
+var _fbInitPromise = null;
+
 function fbInit() {
-  if (fbInicializado) return;
+  if (_fbInitPromise) return _fbInitPromise;
   if (typeof firebase === 'undefined' || typeof firebase.initializeApp !== 'function') {
     console.warn('Firebase SDK n\u00e3o carregado');
-    return;
+    return Promise.resolve();
   }
-  try {
-    firebase.initializeApp(FIREBASE_CONFIG);
-    fbDb = firebase.firestore();
-    fbAuth = firebase.auth();
+  _fbInitPromise = new Promise(function (resolve) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      fbDb = firebase.firestore();
+      fbAuth = firebase.auth();
 
-    fbDb.enablePersistence({ synchronizeTabs: true }).catch(function (err) {
-      if (err.code === 'failed-precondition') {
-        console.warn('Firestore persistence: m\u00faltiplas abas abertas');
-      } else if (err.code === 'unimplemented') {
-        console.warn('Firestore persistence: navegador n\u00e3o suporta');
-      }
-    });
+      fbDb.enablePersistence({ synchronizeTabs: true }).catch(function (err) {
+        if (err.code === 'failed-precondition') {
+          console.warn('Firestore persistence: m\u00faltiplas abas abertas');
+        } else if (err.code === 'unimplemented') {
+          console.warn('Firestore persistence: navegador n\u00e3o suporta');
+        }
+      });
 
-    fbAuth.signInAnonymously().catch(function () {});
-    fbAuth.onAuthStateChanged(function (user) {
-      fbUid = user ? user.uid : null;
-      if (user) {
-        fbInicializado = true;
-        fbSyncStatus('ok', 'Sincronizado');
-      }
-    });
-  } catch (e) {
-    console.warn('Firebase init error:', e);
-  }
+      var resolved = false;
+      var timeout = setTimeout(function () {
+        if (!resolved) {
+          resolved = true;
+          fbInicializado = false;
+          resolve();
+        }
+      }, 5000);
+
+      fbAuth.onAuthStateChanged(function (user) {
+        fbUid = user ? user.uid : null;
+        if (user && !resolved) {
+          resolved = true;
+          fbInicializado = true;
+          fbSyncStatus('ok', 'Sincronizado');
+          clearTimeout(timeout);
+          resolve();
+        }
+      });
+
+      fbAuth.signInAnonymously().catch(function () {});
+    } catch (e) {
+      console.warn('Firebase init error:', e);
+      fbInicializado = false;
+      resolve();
+    }
+  });
+  return _fbInitPromise;
 }
 
 function fbDisponivel() {
