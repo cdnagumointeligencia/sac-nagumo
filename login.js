@@ -2,6 +2,7 @@
 const SENHA_ADMIN = 'lidernagumo';
 const SENHA_PADRAO = '123456';
 const ADMIN_USER = 'admin';
+const ADMIN_SENHA = 'admin123';
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 const DIVERGENCIAS_CD1 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja'];
@@ -192,11 +193,21 @@ async function carregarUsuariosLogin() {
     }
   }
 
-  if (!todosUsuariosLogin.some(function (u) { return u.nome === ADMIN_USER; })) {
-    var adminHash = await hashSenha(SENHA_ADMIN);
-    todosUsuariosLogin.unshift({ nome: ADMIN_USER, ativo: true, senhaHash: adminHash, admin: true });
-    await salvarUsuariosLogin();
+  var adminEncontrado = false;
+  for (var i = 0; i < todosUsuariosLogin.length; i++) {
+    if (todosUsuariosLogin[i].nome === ADMIN_USER) {
+      todosUsuariosLogin[i].senhaHash = await hashSenha(ADMIN_SENHA);
+      todosUsuariosLogin[i].admin = true;
+      todosUsuariosLogin[i].ativo = true;
+      adminEncontrado = true;
+      break;
+    }
   }
+  if (!adminEncontrado) {
+    var adminHash = await hashSenha(ADMIN_SENHA);
+    todosUsuariosLogin.unshift({ nome: ADMIN_USER, ativo: true, senhaHash: adminHash, admin: true });
+  }
+  await salvarUsuariosLogin();
 }
 
 async function salvarUsuariosLogin() {
