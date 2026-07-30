@@ -27,7 +27,7 @@
       <button class="btn" onclick="mudarPagina('dashboard')" id="btnNavDashboard">Dashboard</button>
       <button class="btn" onclick="toggleFiltros()" title="Filtros">&#128269; Filtros</button>
       <button class="btn cd2-only" onclick="mudarPagina('produtividade')" id="btnNavProdutividade">Produtividade</button>
-      <button class="btn btn-config" onclick="abrirModalConfig()" title="Configurações">&#9881;</button>
+      
     </div>
 
     <div id="filterPanel" class="filter-panel">
@@ -406,57 +406,6 @@
     </div>
 
   </div>
-  <div id="modalUsuarios" class="modal">
-    <div class="modal-box">
-      <span class="modal-close" onclick="fecharModal('modalUsuarios')">&times;</span>
-      <h3 id="tituloModalUser">Acesso Restrito</h3>
-      <div id="senhaArea">
-        <input type="password" id="inputSenha" class="modal-input" placeholder="Digite a senha"
-          onkeypress="if(event.key==='Enter')validarSenha()">
-        <div id="senhaErro" style="color:var(--danger);text-align:center;display:none">Senha incorreta!</div>
-        <div class="modal-btns">
-          <button class="btn danger" onclick="fecharModal('modalUsuarios')">Cancelar</button>
-          <button class="btn success" onclick="validarSenha()">Confirmar</button>
-        </div>
-      </div>
-      <div id="gestaoArea" style="display:none">
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <input type="text" id="novoUsuario" class="modal-input" style="margin:0;flex:1;min-width:120px;text-align:left"
-            placeholder="Nome do usuário" onkeypress="if(event.key==='Enter')document.getElementById('novaSenhaUsuario').focus()">
-        <input type="password" id="novaSenhaUsuario" class="modal-input" style="margin:0;flex:0.6;min-width:100px;text-align:left"
-            placeholder="Senha" value="123456" onkeypress="if(event.key==='Enter')adicionarUsuario()">
-          <button class="btn success" onclick="adicionarUsuario()">Adicionar</button>
-        </div>
-        <div id="listaUsuarios" class="user-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Backup -->
-  <div id="modalBackup" class="modal">
-    <div class="modal-box">
-      <span class="modal-close" onclick="fecharModal('modalBackup')">&times;</span>
-      <h3>Backup</h3>
-
-      <div style="border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:12px">
-        <h4 style="font-size:0.9rem;margin-bottom:8px;text-align:left">Backup Completo</h4>
-        <p style="font-size:0.75rem;color:#6b7280;margin-bottom:12px">
-          Exporta TODOS os dados: Chamados CD1 e CD2, Senha SAC, Notas Devolução, Mercadorias, Produtividade, Usuários, Braços e Lojas.
-        </p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn success" onclick="exportarBackupCompleto()">&#128229; Exportar Backup</button>
-          <button class="btn" onclick="importarBackupCompleto()">&#128228; Importar Backup</button>
-        </div>
-      </div>
-
-      <p style="font-size:0.68rem;color:#9ca3af;text-align:center;margin-top:8px">
-        A importação verifica se o backup tem menos dados que o sistema atual e avisa antes de substituir.
-      </p>
-
-      <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importarBackupCompletoFile()">
-    </div>
-  </div>
-
   <!-- Modal Sair com Backup -->
   <div id="modalSairBackup" class="modal">
     <div class="modal-box" style="max-width:420px">
@@ -471,100 +420,6 @@
       </div>
       <div style="text-align:center;margin-top:12px">
         <button onclick="fecharModal('modalSairBackup')" style="background:none;border:none;color:var(--text-dim);font-size:0.75rem;cursor:pointer">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Configurações -->
-  <div id="modalConfig" class="modal">
-    <div class="modal-box">
-      <span class="modal-close" onclick="fecharModal('modalConfig')">&times;</span>
-      <h3>Configurações</h3>
-      <div class="config-grid">
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalUsuarios()">
-          <span class="config-icon">&#128100;</span>
-          <span class="config-label">Usuários</span>
-          <span class="config-desc">Adicionar, editar, excluir e redefinir senhas</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalBackup()">
-          <span class="config-icon">&#128190;</span>
-          <span class="config-label">Backup</span>
-          <span class="config-desc">Exportar e importar backup completo do sistema</span>
-        </div>
-
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirRanking()">
-          <span class="config-icon">&#127942;</span>
-          <span class="config-label">Ranking</span>
-          <span class="config-desc">Desempenho dos usuários por chamados</span>
-        </div>
-        <div class="config-card" id="configCardBracos" onclick="fecharModal('modalConfig');abrirModalBracos()">
-          <span class="config-icon">&#9881;</span>
-          <span class="config-label">Braços</span>
-          <span class="config-desc">Configurar lojas atendidas por braço (CD2)</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalLojas()">
-          <span class="config-icon">&#127970;</span>
-          <span class="config-label">Lojas</span>
-          <span class="config-desc">Gerenciar lista de lojas usada em todas as abas</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalObservacoes()">
-          <span class="config-icon">&#9997;</span>
-          <span class="config-label">Solução</span>
-          <span class="config-desc">Editar opções da coluna Solução de ambas as páginas</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalDivergencias()">
-          <span class="config-icon">&#9881;</span>
-          <span class="config-label">Divergência</span>
-          <span class="config-desc">Editar opções da coluna Divergência de cada CD</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Lojas -->
-  <div id="modalLojas" class="modal">
-    <div class="modal-box" style="max-width:500px">
-      <span class="modal-close" onclick="fecharModal('modalLojas')">&times;</span>
-      <h3>Gerenciar Lojas</h3>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="text" id="novaLoja" class="modal-input" style="margin:0;flex:1;text-align:left"
-          placeholder="Ex: 20-AIMORE" onkeypress="if(event.key==='Enter')adicionarLoja()">
-        <button class="btn success" onclick="adicionarLoja()">Adicionar</button>
-      </div>
-      <div id="listaLojas" class="user-list" style="max-height:400px"></div>
-    </div>
-  </div>
-
-  <!-- Modal Configuração de Solução / Observação -->
-  <div id="modalObservacoes" class="modal">
-    <div class="modal-box" style="max-width:550px">
-      <span class="modal-close" onclick="fecharModal('modalObservacoes')">&times;</span>
-      <h3>&#9997; Gerenciar Solução — <span id="modalObsCD">CD2</span></h3>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="text" id="novaObservacao" class="modal-input" style="margin:0;flex:1;text-align:left"
-          placeholder="Ex: Solicitar nota de devolução" onkeypress="if(event.key==='Enter')adicionarObservacao()">
-        <button class="btn success" onclick="adicionarObservacao()">Adicionar</button>
-      </div>
-      <div id="listaObservacoes" class="user-list" style="max-height:380px"></div>
-      <div class="modal-btns" style="margin-top:16px">
-        <button class="btn danger" onclick="fecharModal('modalObservacoes')">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Divergência -->
-  <div id="modalDivergencias" class="modal">
-    <div class="modal-box" style="max-width:550px">
-      <span class="modal-close" onclick="fecharModal('modalDivergencias')">&times;</span>
-      <h3>&#9881; Gerenciar Divergência — <span id="modalDivCD">CD2</span></h3>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="text" id="novaDivergencia" class="modal-input" style="margin:0;flex:1;text-align:left"
-          placeholder="Ex: Sobra" onkeypress="if(event.key==='Enter')adicionarDivergencia()">
-        <button class="btn success" onclick="adicionarDivergencia()">Adicionar</button>
-      </div>
-      <div id="listaDivergencias" class="user-list" style="max-height:380px"></div>
-      <div class="modal-btns" style="margin-top:16px">
-        <button class="btn danger" onclick="fecharModal('modalDivergencias')">Fechar</button>
       </div>
     </div>
   </div>
@@ -589,28 +444,6 @@
       <div id="rankingConteudo" style="display:none">
         <div class="ranking-mes-label" id="rankingMesLabel"></div>
         <div id="rankingTabela"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Configuração de Braços -->
-  <div id="modalBracos" class="modal">
-    <div class="modal-box" style="max-width:600px">
-      <span class="modal-close" onclick="fecharModal('modalBracos')">&times;</span>
-      <h3>&#9881; Gerenciar Braços</h3>
-      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
-        Configure quais lojas são atendidas por cada braço da esteira (CD2).
-      </p>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="text" id="novoBracoNome" class="modal-input" style="margin:0;width:110px;text-align:left"
-          placeholder="Ex: Braço 12" onkeypress="if(event.key==='Enter')document.getElementById('novoBracoLojas').focus()">
-        <input type="text" id="novoBracoLojas" class="modal-input" style="margin:0;flex:1;text-align:left"
-          placeholder="Ex: 10, 25, 40" onkeypress="if(event.key==='Enter')adicionarBraco()">
-        <button class="btn success" onclick="adicionarBraco()">Adicionar</button>
-      </div>
-      <div id="listaBracos" class="user-list" style="max-height:400px"></div>
-      <div class="modal-btns" style="margin-top:16px">
-        <button class="btn danger" onclick="fecharModal('modalBracos')">Fechar</button>
       </div>
     </div>
   </div>
