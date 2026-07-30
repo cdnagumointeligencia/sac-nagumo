@@ -1,7 +1,4 @@
 // ==================== CONSTANTES ====================
-const SENHA_ADMIN = 'lidernagumo';
-const SENHA_PADRAO = '123456';
-const ADMIN_USER = 'admin';
 const ADMIN_SENHA = 'admin123';
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
@@ -275,7 +272,7 @@ function renderizarListaUsuarios() {
 
 function validarSenha() {
   var hashInput = hashSenha(document.getElementById('inputSenha').value);
-  var hashAdmin = hashSenha(SENHA_ADMIN);
+  var hashAdmin = hashSenha(ADMIN_SENHA);
   Promise.all([hashInput, hashAdmin]).then(function (results) {
     if (results[0] === results[1]) {
       document.getElementById('senhaArea').style.display = 'none';
