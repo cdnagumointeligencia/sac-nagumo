@@ -320,8 +320,9 @@ async function fbCarregarUsuarios() {
 
 async function fbSalvarUsuarios() {
   if (!fbDisponivel()) return;
-  for (var i = 0; i < todosUsuarios.length; i++) {
-    var u = todosUsuarios[i];
+  var lista = todosUsuarios.slice();
+  for (var i = 0; i < lista.length; i++) {
+    var u = lista[i];
     if (!u.nome) continue;
     var docId = 'usr_' + u.nome;
     await fbDocSet('usuarios', docId, {

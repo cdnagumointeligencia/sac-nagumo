@@ -100,6 +100,10 @@ async function adicionarUsuario() {
   document.getElementById('novoUsuario').value = '';
   document.getElementById('novaSenhaUsuario').value = SENHA_PADRAO;
   await salvarTodosUsuarios();
+  if (!todosUsuarios.some(u => u.nome === nome)) {
+    todosUsuarios.push({ nome, ativo: true, senhaHash });
+    todosUsuarios.sort((a, b) => a.nome.localeCompare(b.nome));
+  }
   usuarios = todosUsuarios.filter(u => u.ativo).map(u => u.nome);
   atualizarListaUsuarios();
   popularSelectLogin();

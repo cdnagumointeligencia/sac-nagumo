@@ -601,9 +601,11 @@ async function carregarTudo() {
 var _fbTimerChamados = null;
 
 async function salvarTodosUsuarios() {
-  lsSetShared('SAC_USUARIOS', todosUsuarios);
-  lsSet('usuarios', todosUsuarios);
+  var snapshot = todosUsuarios.slice();
+  lsSetShared('SAC_USUARIOS', snapshot);
+  lsSet('usuarios', snapshot);
   await fbSalvarUsuarios();
+  todosUsuarios = snapshot;
 }
 
 async function salvarDadosMes() {
