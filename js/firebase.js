@@ -102,6 +102,11 @@ async function fbDocCreate(colecao, id, data, extra) {
     var ref = fbDb.collection(colecao).doc(id);
     var snap = await ref.get();
     if (snap.exists) {
+      var existing = snap.data();
+      if (existing && existing.ativo === false) {
+        await ref.set(fbDataComAuditoria(data, extra));
+        return true;
+      }
       toast('Registro duplicado: j\u00e1 existe no sistema!', 'error');
       return false;
     }
