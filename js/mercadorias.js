@@ -13,7 +13,8 @@ async function carregarMercadoriasNF() {
   }
   garantirIds(dadosMercadoriasNF);
   if (fbDisponivel() && cdAtual) {
-    fbOnSnapshotColecao('mercadoriasNF', dadosMercadoriasNF);
+    if (_snapMerc) { try { _snapMerc(); } catch (e) {} }
+    _snapMerc = fbOnSnapshotColecao('mercadoriasNF', dadosMercadoriasNF);
   }
 }
 

@@ -10,7 +10,8 @@ async function carregarProdutividade() {
   }
   garantirIds(dadosProdutividade);
   if (fbDisponivel() && cdAtual) {
-    fbOnSnapshotColecao('produtividade', dadosProdutividade);
+    if (_snapProd) { try { _snapProd(); } catch (e) {} }
+    _snapProd = fbOnSnapshotColecao('produtividade', dadosProdutividade);
   }
 }
 

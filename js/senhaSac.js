@@ -10,7 +10,8 @@ async function carregarSenhasSac() {
   }
   garantirIds(dadosSenhasSac);
   if (fbDisponivel() && cdAtual) {
-    fbOnSnapshotColecao('senhasSac', dadosSenhasSac);
+    if (_snapSenhas) { try { _snapSenhas(); } catch (e) {} }
+    _snapSenhas = fbOnSnapshotColecao('senhasSac', dadosSenhasSac);
   }
 }
 

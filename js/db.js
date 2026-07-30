@@ -108,6 +108,8 @@ function fbMontarDadosMes(resultados) {
 async function fbCarregarChamados() {
   if (!fbDisponivel() || !cdAtual) return new Promise(function (r) { r(false); });
 
+  if (_snapChamados) { try { _snapChamados(); } catch (e) {} _snapChamados = null; }
+
   var ano = new Date().getFullYear();
   var p = new Promise(function (resolve) {
     _chamadosInicialResolve = resolve;

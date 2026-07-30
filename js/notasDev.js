@@ -10,7 +10,8 @@ async function carregarNotasDev() {
   }
   garantirIds(dadosNotasDev);
   if (fbDisponivel() && cdAtual) {
-    fbOnSnapshotColecao('notasDevolucao', dadosNotasDev);
+    if (_snapNotas) { try { _snapNotas(); } catch (e) {} }
+    _snapNotas = fbOnSnapshotColecao('notasDevolucao', dadosNotasDev);
   }
 }
 

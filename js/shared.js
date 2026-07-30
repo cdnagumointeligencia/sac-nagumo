@@ -380,6 +380,7 @@ function atualizarBarraUsuario() {
 
 async function iniciarSistema() {
   fecharTelaLogin();
+  fbPararSnapshots();
   const sessao = verificarSessao();
   if (!sessao) { telaLogin(); return; }
   usuarioLogado = sessao.nome;
