@@ -310,7 +310,7 @@ function criarCelInput(type, value, label, idx, field) {
             inp.value = dadosMes[mesAtual][idx].chamado || '';
             return;
           }
-          fbExcluirChamado(oldId);
+          if (_idNatural(oldId)) fbExcluirChamado(oldId);
         }
       }
       salvar(true);
