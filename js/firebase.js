@@ -35,27 +35,22 @@ function fbInit() {
         }
       });
 
-      var resolved = false;
-      var timeout = setTimeout(function () {
-        if (!resolved) {
-          resolved = true;
-          fbInicializado = false;
-          resolve();
-        }
-      }, 5000);
-
       fbAuth.onAuthStateChanged(function (user) {
         fbUid = user ? user.uid : null;
-        if (user && !resolved) {
-          resolved = true;
+        if (user) {
           fbInicializado = true;
           fbSyncStatus('ok', 'Sincronizado');
-          clearTimeout(timeout);
-          resolve();
         }
       });
 
-      fbAuth.signInAnonymously().catch(function () {});
+      fbAuth.signInAnonymously().then(function () {
+        fbInicializado = true;
+        resolve();
+      }).catch(function (err) {
+        console.warn('Firebase anonymous auth error:', err);
+        fbInicializado = false;
+        resolve();
+      });
     } catch (e) {
       console.warn('Firebase init error:', e);
       fbInicializado = false;
