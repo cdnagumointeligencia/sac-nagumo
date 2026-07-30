@@ -201,6 +201,7 @@ function criarCelSelectLoja(value, onChange) {
     if (loja === value) opt.selected = true;
     sel.appendChild(opt);
   });
+  try { sel.value = value; } catch (e) {}
   sel.onchange = () => {
     td.title = sel.value;
     onChange(sel.value);

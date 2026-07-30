@@ -137,6 +137,8 @@ function criarLinha(d, idx) {
     }
     salvarDadosMes();
     atualizarTotais();
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) fbAtualizarCampoChamado(docId, 'loja', val);
   }));
 
   tr.appendChild(criarCelSelect(TURNOS, d.turno, idx, 'turno'));
@@ -294,10 +296,14 @@ function criarCelInput(type, value, label, idx, field) {
           if (rowIdx !== -1) {
             dadosMes[mesAtual][rowIdx].id = naturalId;
           }
+          var atual = dadosMes[mesAtual][idx];
           var criado = await fbDocCreate('chamados', naturalId, {
-            id: naturalId, chamado: chamadoNum, loja: '', braco: '', turno: '',
-            setor: '', plu: '', divergencia: '', observacao: '', obsTexto: '',
-            conferente: '', usuario: usuarioLogado || '', dataAbertura: '', dataFechamento: ''
+            id: naturalId, chamado: chamadoNum,
+            loja: atual.loja || '', braco: atual.braco || '', turno: atual.turno || '',
+            setor: atual.setor || '', plu: atual.plu || '', divergencia: atual.divergencia || '',
+            observacao: atual.observacao || '', obsTexto: atual.obsTexto || '',
+            conferente: atual.conferente || '', usuario: atual.usuario || usuarioLogado || '',
+            dataAbertura: atual.dataAbertura || '', dataFechamento: atual.dataFechamento || ''
           }, { cd: cdAtual, ano: anoAtual, mes: MESES.indexOf(mesAtual), mesNome: mesAtual });
           if (!criado) {
             if (rowIdx !== -1) dadosMes[mesAtual][rowIdx].id = oldId;

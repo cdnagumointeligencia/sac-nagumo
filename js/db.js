@@ -126,7 +126,11 @@ async function fbCarregarChamados() {
           dadosMes[mes].forEach(function (d) { if (d.id) porId[d.id] = d; });
           fbDadosMes[mes].forEach(function (fb) {
             if (fb.id && porId[fb.id]) {
-              for (var k in fb) porId[fb.id][k] = fb[k];
+              for (var k in fb) {
+                if (k === 'id' || k === 'firestoreId') continue;
+                if (!fb[k] && porId[fb.id][k]) continue;
+                porId[fb.id][k] = fb[k];
+              }
             } else {
               dadosMes[mes].push(fb);
             }
