@@ -289,6 +289,7 @@ function criarCelInput(type, value, label, idx, field) {
         }
         var naturalId = cdAtual + '_' + chamadoNum;
         if (dadosMes[mesAtual][idx].id !== naturalId) {
+          var oldId = dadosMes[mesAtual][idx].id;
           var criado = await fbDocCreate('chamados', naturalId, {
             id: naturalId, chamado: chamadoNum, loja: '', braco: '', turno: '',
             setor: '', plu: '', divergencia: '', observacao: '', obsTexto: '',
@@ -298,7 +299,10 @@ function criarCelInput(type, value, label, idx, field) {
             inp.value = dadosMes[mesAtual][idx].chamado || '';
             return;
           }
-          dadosMes[mesAtual][idx].id = naturalId;
+          var rowIdx = dadosMes[mesAtual].findIndex(function (d) { return d.id === oldId; });
+          if (rowIdx !== -1) {
+            dadosMes[mesAtual][rowIdx].id = naturalId;
+          }
         }
       }
       salvar(true);

@@ -118,7 +118,9 @@ async function fbCarregarChamados() {
       ['ativo', '==', true]
     ], function (resultados) {
       var fbDadosMes = fbMontarDadosMes(resultados);
-      dadosMes = fbDadosMes;
+      for (var mes in fbDadosMes) {
+        dadosMes[mes] = fbDadosMes[mes];
+      }
 
       if (_chamadosInicialResolve) {
         var r = _chamadosInicialResolve;
@@ -136,6 +138,10 @@ async function fbCarregarChamados() {
   return ok;
 }
 
+function _idNatural(id) {
+  return id && id.indexOf(cdAtual + '_') === 0;
+}
+
 async function fbSalvarChamados() {
   if (!fbDisponivel() || !cdAtual || !mesAtual) return;
   var registros = normalizarRegistros(dadosMes[mesAtual]);
@@ -146,6 +152,7 @@ async function fbSalvarChamados() {
   for (var i = 0; i < registros.length; i++) {
     var c = registros[i];
     if (!c || !c.id) continue;
+    if (!_idNatural(c.id)) continue;
     await fbDocSet('chamados', c.id, {
       id: c.id,
       chamado: c.chamado || '',
@@ -262,11 +269,7 @@ function fbAtualizarCampoChamado(id, campo, valor) {
       [campo]: valor,
       alteradoEm: fbTimestamp(),
       alteradoPor: usuarioLogado || 'sistema'
-    }).catch(function (err) {
-      if (err.code === 'not-found') {
-        fbSalvarChamados();
-      }
-    });
+    }).catch(function () {});
   } catch (e) {}
 }
 
