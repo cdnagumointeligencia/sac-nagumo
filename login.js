@@ -1255,7 +1255,7 @@ function normalizarRegistros(registros) {
 
 // ==================== LOGIN ====================
 function popularDropdownUsuarios() {
-  var sel = document.getElementById('loginUser');
+  var sel = document.getElementById('loginUsuario');
   if (!sel) return;
   sel.innerHTML = '<option value="">— Selecione —</option>';
   todosUsuariosLogin.forEach(function (u) {
@@ -1268,8 +1268,8 @@ function popularDropdownUsuarios() {
 }
 
 async function fazerLogin(cd) {
-  var sel = document.getElementById('loginUser');
-  var senhaInput = document.getElementById('loginPassword');
+  var sel = document.getElementById('loginUsuario');
+  var senhaInput = document.getElementById('loginSenha');
   var erroEl = document.getElementById('loginErro');
   if (!sel || !senhaInput || !erroEl) return;
 

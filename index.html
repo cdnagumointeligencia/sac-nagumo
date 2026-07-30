@@ -7,35 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style1.css">
   <style>
-    .login-screen { background: #F7F7F7; }
-    .login-card { padding: 44px 38px 34px; max-width: 400px; }
-    .login-brand { margin-bottom: 28px; }
-    .login-brand h1 { font-size: 1.6rem; }
-    .login-brand p { font-size: 0.78rem; }
-    .login-field { margin-bottom: 14px; }
-    .login-field label { display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 4px; text-align: left; }
-    .login-field select, .login-field input {
-      width: 100%; padding: 10px 12px; border: 1.5px solid #d1d5db; border-radius: 8px;
-      font-size: 0.85rem; background: #fff; transition: border-color 0.2s;
-      box-sizing: border-box; text-align: left;
-    }
-    .login-field select:focus, .login-field input:focus { outline: none; border-color: var(--primary); }
-    .login-cd-options { gap: 12px; margin-top: 18px; }
-    .login-cd-card {
-      flex: 1; padding: 18px 0; border-radius: 12px 5px 12px 5px;
-      transition: all 0.25s ease; cursor: pointer;
-    }
-    .login-cd-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px -10px rgba(0,51,100,0.2);
-    }
-    .login-cd-card[data-cd="CD2"]:hover {
-      box-shadow: 0 10px 24px -10px rgba(6,95,70,0.2);
-    }
-    .login-cd-num { font-size: 1.3rem; }
-    .login-cd-sub { display: block; font-size: 0.62rem; color: #9ca3af; margin-top: 3px; letter-spacing: 0.3px; }
-    .login-footer { margin-top: 28px; font-size: 0.65rem; }
-    .login-erro { color: var(--danger); font-size: 0.75rem; text-align: center; display: none; margin-top: 8px; }
     .login-config-btn {
       position: fixed; top: 16px; right: 16px; z-index: 10001;
       width: 42px; height: 42px; border: none; border-radius: 10px;
@@ -48,6 +19,7 @@
   </style>
 </head>
 <body>
+  <!-- ========== TELA DE LOGIN ========== -->
   <div id="loginScreen" class="login-screen show">
     <div class="login-blob-wrap"><div class="login-blob login-blob-1" aria-hidden="true"></div></div>
     <div class="login-blob-wrap"><div class="login-blob login-blob-2" aria-hidden="true"></div></div>
@@ -62,30 +34,31 @@
         <p>Acompanhamento de Chamados</p>
       </div>
 
-      <div class="login-field">
-        <label for="loginUser">Usuário</label>
-        <select id="loginUser">
-          <option value="">— Selecione —</option>
+      <div id="loginErro" class="login-error" style="display:none">Usuário ou senha inválidos!</div>
+
+      <div class="login-field" id="loginUserField">
+        <label for="loginUsuario">Usuário</label>
+        <select id="loginUsuario" onfocus="this.closest('.login-field').classList.add('focus')" onblur="loginFieldBlur(this)">
+          <option value="">Selecione...</option>
         </select>
       </div>
 
-      <div class="login-field">
-        <label for="loginPassword">Senha</label>
-        <input type="password" id="loginPassword" placeholder="Digite sua senha"
-          onkeypress="if(event.key==='Enter'){var btns=document.querySelectorAll('.login-cd-card');if(btns.length>0)btns[0].click()}">
+      <div class="login-field" id="loginSenhaField">
+        <label for="loginSenha">Senha</label>
+        <input type="password" id="loginSenha" placeholder=""
+          onfocus="this.closest('.login-field').classList.add('focus')"
+          onblur="loginFieldBlur(this)"
+          onkeypress="if(event.key==='Enter'){var btns=document.querySelectorAll('.login-cd-card');if(btns.length>1)btns[0].click()}">
       </div>
 
-      <div id="loginErro" class="login-erro">Usuário ou senha inválidos!</div>
-
       <div class="login-cd-select">
+        <label class="login-cd-label">Selecione o CD</label>
         <div class="login-cd-options">
           <button type="button" class="login-cd-card" data-cd="CD1" onclick="fazerLogin('CD1')">
             <span class="login-cd-num">CD 1</span>
-            <span class="login-cd-sub">Entrar no CD 1</span>
           </button>
           <button type="button" class="login-cd-card" data-cd="CD2" onclick="fazerLogin('CD2')">
             <span class="login-cd-num">CD 2</span>
-            <span class="login-cd-sub">Entrar no CD 2</span>
           </button>
         </div>
       </div>
@@ -93,6 +66,37 @@
       <div class="login-footer">CD NAGUMO · SISTEMA SAC · USO INTERNO</div>
     </div>
   </div>
+
+  <script>
+  (function() {
+    var screenEl = document.getElementById('loginScreen');
+    if (!screenEl) return;
+    var wraps = screenEl.querySelectorAll('.login-blob-wrap');
+    if (!wraps.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var raf = null, mx = 0, my = 0;
+    screenEl.addEventListener('mousemove', function(e) {
+      var r = screenEl.getBoundingClientRect();
+      mx = ((e.clientX - r.left) / r.width - 0.5);
+      my = ((e.clientY - r.top) / r.height - 0.5);
+      if (!raf) raf = requestAnimationFrame(applyParallax);
+    });
+    function applyParallax() {
+      raf = null;
+      wraps.forEach(function(w, i) {
+        var f = (i + 1) * 14;
+        w.style.transform = 'translate(' + (mx * f) + 'px,' + (my * f) + 'px)';
+      });
+    }
+  })();
+
+  function loginFieldBlur(el) {
+    var field = el.closest('.login-field');
+    if (!field) return;
+    field.classList.remove('focus');
+    if (el.value) field.classList.add('has-value');
+    else field.classList.remove('has-value');
+  }
+  </script>
 
   <!-- Modal Configurações -->
   <div id="modalConfig" class="modal">
@@ -254,29 +258,6 @@
   </div>
 
   <div id="toastContainer" style="position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px"></div>
-
-  <script>
-    (function() {
-      var screenEl = document.getElementById('loginScreen');
-      if (!screenEl) return;
-      var wraps = screenEl.querySelectorAll('.login-blob-wrap');
-      if (!wraps.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      var raf = null, mx = 0, my = 0;
-      screenEl.addEventListener('mousemove', function(e) {
-        var r = screenEl.getBoundingClientRect();
-        mx = ((e.clientX - r.left) / r.width - 0.5);
-        my = ((e.clientY - r.top) / r.height - 0.5);
-        if (!raf) raf = requestAnimationFrame(applyParallax);
-      });
-      function applyParallax() {
-        raf = null;
-        wraps.forEach(function(w, i) {
-          var f = (i + 1) * 14;
-          w.style.transform = 'translate(' + (mx * f) + 'px,' + (my * f) + 'px)';
-        });
-      }
-    })();
-  </script>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
