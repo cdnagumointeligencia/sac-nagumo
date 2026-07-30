@@ -379,6 +379,7 @@ async function iniciarSistema() {
   carregarLojas();
   carregarObservacoes();
   carregarDivergencias();
+  configurarSnapshots();
   mesAtualSenhasSac = mesAtual;
   mesAtualNotasDev = mesAtual;
   mesAtualMercadoriasNF = mesAtual;
@@ -390,6 +391,28 @@ async function iniciarSistema() {
   definirDatasFiltro();
   if (paginaAtual !== 'chamados') mudarPagina('chamados');
   document.getElementById('tituloPagina').textContent = 'Acompanhamento de Chamados ' + cdAtual;
+}
+
+function configurarSnapshots() {
+  fbOnSnapshotConfig('config', 'bracos', function (data) {
+    if (data && data.dados) bracosConfig = data.dados;
+  });
+  fbOnSnapshotConfig('config', 'lojas', function (data) {
+    if (data && Array.isArray(data.dados)) lojasMercadorias = data.dados;
+  });
+  fbOnSnapshotConfig('config', 'observacoes', function (data) {
+    if (data && data.dados) observacoesCustom = data.dados;
+  });
+  fbOnSnapshotConfig('config', 'divergencias', function (data) {
+    if (data && data.dados) divergenciasCustom = data.dados;
+  });
+  fbOnSnapshot('usuarios', [], function (results) {
+    if (results && results.length > 0) {
+      todosUsuarios = results;
+      usuarios = todosUsuarios.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
+      popularSelectLogin();
+    }
+  }, function () {});
 }
 
 // ==================== ABAS MENSIS ====================
@@ -663,17 +686,23 @@ function carregarBracosConfig() {
       const salvas = JSON.parse(raw);
       if (salvas && Object.keys(salvas).length > 0) {
         bracosConfig = salvas;
-        return;
       }
     }
   } catch {}
-  bracosConfig = {};
-  Object.entries(BRACOS_DEFAULT).forEach(([nome, lojas]) => { bracosConfig[nome] = lojas; });
-  salvarBracosConfigLocalStorage();
+  if (!bracosConfig || Object.keys(bracosConfig).length === 0) {
+    bracosConfig = {};
+    Object.entries(BRACOS_DEFAULT).forEach(([nome, lojas]) => { bracosConfig[nome] = lojas; });
+  }
+  fbCarregarConfig('config', 'bracos').then(function (fbData) {
+    if (fbData && fbData.dados && Object.keys(fbData.dados).length > 0) {
+      bracosConfig = fbData.dados;
+    }
+  });
 }
 
 function salvarBracosConfigLocalStorage() {
   try { localStorage.setItem('SAC_brasConfig', JSON.stringify(bracosConfig)); } catch {}
+  fbSalvarConfig('config', 'bracos', { dados: bracosConfig });
 }
 
 function buscarBracoPorLoja(loja) {
@@ -791,16 +820,22 @@ function carregarLojas() {
       const salvas = JSON.parse(raw);
       if (Array.isArray(salvas) && salvas.length > 0) {
         lojasMercadorias = salvas;
-        return;
       }
     }
   } catch {}
-  lojasMercadorias = [...LOJAS_MERCADORIAS_DEFAULT];
-  salvarLojas();
+  if (!lojasMercadorias || lojasMercadorias.length === 0) {
+    lojasMercadorias = [...LOJAS_MERCADORIAS_DEFAULT];
+  }
+  fbCarregarConfig('config', 'lojas').then(function (fbData) {
+    if (fbData && Array.isArray(fbData.dados) && fbData.dados.length > 0) {
+      lojasMercadorias = fbData.dados;
+    }
+  });
 }
 
 function salvarLojas() {
   localStorage.setItem('SAC_LOJAS_MERCADORIAS', JSON.stringify(lojasMercadorias));
+  fbSalvarConfig('config', 'lojas', { dados: lojasMercadorias });
 }
 
 function abrirModalLojas() {
@@ -892,15 +927,22 @@ function carregarObservacoes() {
       const parsed = JSON.parse(raw);
       if (typeof parsed === 'object' && parsed !== null) {
         observacoesCustom = parsed;
-        return;
       }
     }
   } catch {}
-  observacoesCustom = {};
+  if (!observacoesCustom || Object.keys(observacoesCustom).length === 0) {
+    observacoesCustom = {};
+  }
+  fbCarregarConfig('config', 'observacoes').then(function (fbData) {
+    if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
+      observacoesCustom = fbData.dados;
+    }
+  });
 }
 
 function salvarObservacoes() {
   localStorage.setItem('SAC_OBSERVACOES_CUSTOM', JSON.stringify(observacoesCustom));
+  fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
 }
 
 function abrirModalObservacoes() {
@@ -1014,15 +1056,22 @@ function carregarDivergencias() {
       const parsed = JSON.parse(raw);
       if (typeof parsed === 'object' && parsed !== null) {
         divergenciasCustom = parsed;
-        return;
       }
     }
   } catch {}
-  divergenciasCustom = {};
+  if (!divergenciasCustom || Object.keys(divergenciasCustom).length === 0) {
+    divergenciasCustom = {};
+  }
+  fbCarregarConfig('config', 'divergencias').then(function (fbData) {
+    if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
+      divergenciasCustom = fbData.dados;
+    }
+  });
 }
 
 function salvarDivergencias() {
   localStorage.setItem('SAC_DIVERGENCIAS_CUSTOM', JSON.stringify(divergenciasCustom));
+  fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
 }
 
 function abrirModalDivergencias() {

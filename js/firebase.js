@@ -335,3 +335,46 @@ async function fbCarregarTudoBackup() {
 
   return resultado;
 }
+
+// ==================== CONFIG (documento único por tipo) ====================
+
+var _fbSnapConfigs = {};
+
+function fbCancelarSnapConfigs() {
+  for (var k in _fbSnapConfigs) {
+    if (typeof _fbSnapConfigs[k] === 'function') _fbSnapConfigs[k]();
+  }
+  _fbSnapConfigs = {};
+}
+
+async function fbCarregarConfig(colecao, docId) {
+  if (!fbDisponivel()) return null;
+  try {
+    var doc = await fbDb.collection(colecao).doc(docId).get();
+    if (doc.exists) return doc.data();
+  } catch (e) {}
+  return null;
+}
+
+async function fbSalvarConfig(colecao, docId, dados) {
+  if (!fbDisponivel()) return;
+  try {
+    await fbDb.collection(colecao).doc(docId).set(
+      fbDataComAuditoria(dados, {}),
+      { merge: true }
+    );
+  } catch (err) {
+    toast('Erro ao salvar config: ' + err.message, 'error');
+  }
+}
+
+function fbOnSnapshotConfig(colecao, docId, callback) {
+  if (!fbDisponivel()) return;
+  var chave = colecao + '/' + docId;
+  if (_fbSnapConfigs[chave]) return;
+  _fbSnapConfigs[chave] = fbDb.collection(colecao).doc(docId).onSnapshot(function (doc) {
+    if (doc.exists) {
+      callback(doc.data());
+    }
+  }, function () {});
+}
