@@ -418,6 +418,28 @@ async function salvarDadosMes() {
   _fbTimerChamados = setTimeout(fbSalvarChamados, 500);
 }
 
+// ==================== SNAPSHOTS ====================
+function configurarSnapshots() {
+  fbOnSnapshotConfig('config', 'bracos', function (data) {
+    if (data && data.dados) bracosConfig = data.dados;
+  });
+  fbOnSnapshotConfig('config', 'lojas', function (data) {
+    if (data && Array.isArray(data.dados)) lojasMercadorias = data.dados;
+  });
+  fbOnSnapshotConfig('config', 'observacoes', function (data) {
+    if (data && data.dados) observacoesCustom = data.dados;
+  });
+  fbOnSnapshotConfig('config', 'divergencias', function (data) {
+    if (data && data.dados) divergenciasCustom = data.dados;
+  });
+  fbOnSnapshot('usuarios', [], function (results) {
+    if (results && results.length > 0) {
+      todosUsuarios = results;
+      usuarios = todosUsuarios.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
+    }
+  }, function () {});
+}
+
 // ==================== FILTROS ====================
 function definirDatasFiltro() {
   const hoje = new Date();
