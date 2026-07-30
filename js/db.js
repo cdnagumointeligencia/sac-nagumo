@@ -165,9 +165,9 @@ function _filtrarDadosMesPorCD() {
   for (var mes in dadosMes) {
     dadosMes[mes] = dadosMes[mes].filter(function (r) {
       if (!r.id) return true;
-      var sep = r.id.indexOf('_');
-      if (sep < 0) return true;
-      return r.id.indexOf(cdAtual + '_') === 0;
+      if (r.id.indexOf('CD1_') === 0) return cdAtual === 'CD1';
+      if (r.id.indexOf('CD2_') === 0) return cdAtual === 'CD2';
+      return true;
     });
   }
 }
