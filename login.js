@@ -1,5 +1,7 @@
 // ==================== CONSTANTES ====================
 const ADMIN_SENHA = 'admin123';
+const ADMIN_USER = 'admin';
+const SENHA_PADRAO = '123456';
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 const DIVERGENCIAS_CD1 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja'];
