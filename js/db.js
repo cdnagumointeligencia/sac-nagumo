@@ -139,7 +139,8 @@ async function fbCarregarChamados() {
           });
         }
       }
-
+      _filtrarDadosMesPorCD();
+ 
       if (_chamadosInicialResolve) {
         var r = _chamadosInicialResolve;
         _chamadosInicialResolve = null;
@@ -158,6 +159,17 @@ async function fbCarregarChamados() {
 
 function _idNatural(id) {
   return id && id.indexOf(cdAtual + '_') === 0;
+}
+
+function _filtrarDadosMesPorCD() {
+  for (var mes in dadosMes) {
+    dadosMes[mes] = dadosMes[mes].filter(function (r) {
+      if (!r.id) return true;
+      var sep = r.id.indexOf('_');
+      if (sep < 0) return true;
+      return r.id.indexOf(cdAtual + '_') === 0;
+    });
+  }
 }
 
 async function fbSalvarChamados() {

@@ -585,6 +585,7 @@ async function carregarTudo() {
     var dados = lsGet('dados') || [];
     dadosMes = {};
     dados.forEach(function (d) { dadosMes[d.mes] = normalizarRegistros(d.registros); });
+    _filtrarDadosMesPorCD();
   }
   var mudouIds = false;
   Object.values(dadosMes).forEach(function (regs) {
