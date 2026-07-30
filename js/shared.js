@@ -530,7 +530,7 @@ async function carregarUsuarios() {
       }
       todosUsuarios = salvos;
       usuarios = salvos.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
-      if (migracao) await salvarTodosUsuarios();
+      if (migracao || fbDisponivel()) await salvarTodosUsuarios();
     } else {
       await hashSenha(SENHA_PADRAO);
       todosUsuarios = [];
@@ -696,6 +696,8 @@ function carregarBracosConfig() {
   fbCarregarConfig('config', 'bracos').then(function (fbData) {
     if (fbData && fbData.dados && Object.keys(fbData.dados).length > 0) {
       bracosConfig = fbData.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'bracos', { dados: bracosConfig });
     }
   });
 }
@@ -829,6 +831,8 @@ function carregarLojas() {
   fbCarregarConfig('config', 'lojas').then(function (fbData) {
     if (fbData && Array.isArray(fbData.dados) && fbData.dados.length > 0) {
       lojasMercadorias = fbData.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'lojas', { dados: lojasMercadorias });
     }
   });
 }
@@ -936,6 +940,8 @@ function carregarObservacoes() {
   fbCarregarConfig('config', 'observacoes').then(function (fbData) {
     if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
       observacoesCustom = fbData.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
     }
   });
 }
@@ -1065,6 +1071,8 @@ function carregarDivergencias() {
   fbCarregarConfig('config', 'divergencias').then(function (fbData) {
     if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
       divergenciasCustom = fbData.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
     }
   });
 }
