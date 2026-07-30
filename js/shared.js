@@ -578,6 +578,7 @@ async function carregarTudo() {
 
   // Firestore primeiro, fallback localStorage
   var fbOk = await fbCarregarChamados();
+  await fbLimparChamadosLegado();
   if (!fbOk) {
     var dados = lsGet('dados') || [];
     dadosMes = {};

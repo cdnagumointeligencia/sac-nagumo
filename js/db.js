@@ -181,6 +181,27 @@ async function fbExcluirChamado(id) {
   await fbDocDelete('chamados', id);
 }
 
+async function fbLimparChamadosLegado() {
+  if (!fbDisponivel() || !cdAtual) return;
+  var ano = new Date().getFullYear();
+  var resultados = await fbQuery('chamados', [
+    ['cd', '==', cdAtual],
+    ['ano', '==', ano],
+    ['ativo', '==', true]
+  ]);
+  if (!resultados) return;
+  var prefixo = cdAtual + '_';
+  var promises = [];
+  for (var i = 0; i < resultados.length; i++) {
+    var r = resultados[i];
+    var docId = r.firestoreId || r.id;
+    if (docId && docId.indexOf(prefixo) !== 0) {
+      promises.push(fbDocDelete('chamados', docId));
+    }
+  }
+  await Promise.all(promises);
+}
+
 // ==================== COLEÇÕES GENÉRICAS: onSnapshot + Write ====================
 var _snapSenhas = null;
 var _snapNotas = null;

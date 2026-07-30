@@ -299,6 +299,7 @@ function criarCelInput(type, value, label, idx, field) {
             inp.value = dadosMes[mesAtual][idx].chamado || '';
             return;
           }
+          fbExcluirChamado(oldId);
           var rowIdx = dadosMes[mesAtual].findIndex(function (d) { return d.id === oldId; });
           if (rowIdx !== -1) {
             dadosMes[mesAtual][rowIdx].id = naturalId;
