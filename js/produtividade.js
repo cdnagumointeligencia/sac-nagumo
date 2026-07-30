@@ -1,98 +1,222 @@
 // ==================== PRODUTIVIDADE ====================
-let dadosProdutividade = {};
-let _prodSaveTimer = null;
+let dadosProdutividade = [];
+
+var _fbTimerProd = null;
 
 async function carregarProdutividade() {
-  var fbOk = await fbCarregarProdutividade();
+  var fbOk = await fbCarregarColecao('produtividade', dadosProdutividade);
   if (!fbOk) {
-    var dados = lsGetShared('SAC_PRODUTIVIDADE_dados') || [];
-    dadosProdutividade = {};
-    dados.forEach(function (d) { dadosProdutividade[d.mes] = { t1: d.t1 || 0, t2: d.t2 || 0, t3: d.t3 || 0 }; });
+    dadosProdutividade = lsGetCd('PRODUTIVIDADE_dados') || [];
   }
-  MESES.forEach(function (m) { if (!dadosProdutividade[m]) dadosProdutividade[m] = { t1: 0, t2: 0, t3: 0 }; });
-}
-
-function renderizarProdutividade() {
-  document.getElementById('prodTitleCd').textContent = cdAtual;
-  const hoje = new Date();
-  document.getElementById('prodTitleMes').textContent = MESES[hoje.getMonth()] + ' ' + hoje.getFullYear();
-  const tbody = document.getElementById('produtividadeBody');
-  tbody.innerHTML = '';
-  let total1 = 0, total2 = 0, total3 = 0;
-  MESES.forEach(mes => {
-    const d = dadosProdutividade[mes] || { t1: 0, t2: 0, t3: 0 };
-    const t1 = d.t1 || 0, t2 = d.t2 || 0, t3 = d.t3 || 0;
-    total1 += t1; total2 += t2; total3 += t3;
-    const isEmpty = t1 === 0 && t2 === 0 && t3 === 0;
-    const tr = document.createElement('tr');
-    if (isEmpty) tr.className = 'empty-row';
-    tr.innerHTML = '<td class="mes-col">' + mes + '</td>' +
-      '<td><input type="text" inputmode="numeric" value="' + (t1 || '') + '" data-mes="' + mes + '" data-turno="t1" oninput="atualizarProdutividade(this)"></td>' +
-      '<td><input type="text" inputmode="numeric" value="' + (t2 || '') + '" data-mes="' + mes + '" data-turno="t2" oninput="atualizarProdutividade(this)"></td>' +
-      '<td><input type="text" inputmode="numeric" value="' + (t3 || '') + '" data-mes="' + mes + '" data-turno="t3" oninput="atualizarProdutividade(this)"></td>' +
-      '<td class="total-col">' + (t1 + t2 + t3).toLocaleString('pt-BR') + '</td>';
-    tbody.appendChild(tr);
-  });
-  document.getElementById('prodTotal1').textContent = total1.toLocaleString('pt-BR');
-  document.getElementById('prodTotal2').textContent = total2.toLocaleString('pt-BR');
-  document.getElementById('prodTotal3').textContent = total3.toLocaleString('pt-BR');
-  document.getElementById('prodTotalGeral').textContent = (total1 + total2 + total3).toLocaleString('pt-BR');
-  document.getElementById('prodSum1').textContent = total1.toLocaleString('pt-BR');
-  document.getElementById('prodSum2').textContent = total2.toLocaleString('pt-BR');
-  document.getElementById('prodSum3').textContent = total3.toLocaleString('pt-BR');
-  document.getElementById('prodSumGeral').textContent = (total1 + total2 + total3).toLocaleString('pt-BR');
-}
-
-function atualizarProdutividade(inp) {
-  const mes = inp.dataset.mes;
-  const turno = inp.dataset.turno;
-  if (!dadosProdutividade[mes]) dadosProdutividade[mes] = { t1: 0, t2: 0, t3: 0 };
-  dadosProdutividade[mes][turno] = parseInt(inp.value) || 0;
-  const d = dadosProdutividade[mes];
-  const total = (d.t1 || 0) + (d.t2 || 0) + (d.t3 || 0);
-  inp.closest('tr').querySelector('.total-col').textContent = total.toLocaleString('pt-BR');
-  inp.closest('tr').classList.toggle('empty-row', total === 0);
-  let total1 = 0, total2 = 0, total3 = 0;
-  MESES.forEach(m => { const dd = dadosProdutividade[m] || { t1: 0, t2: 0, t3: 0 }; total1 += dd.t1 || 0; total2 += dd.t2 || 0; total3 += dd.t3 || 0; });
-  document.getElementById('prodTotal1').textContent = total1.toLocaleString('pt-BR');
-  document.getElementById('prodTotal2').textContent = total2.toLocaleString('pt-BR');
-  document.getElementById('prodTotal3').textContent = total3.toLocaleString('pt-BR');
-  document.getElementById('prodTotalGeral').textContent = (total1 + total2 + total3).toLocaleString('pt-BR');
-  document.getElementById('prodSum1').textContent = total1.toLocaleString('pt-BR');
-  document.getElementById('prodSum2').textContent = total2.toLocaleString('pt-BR');
-  document.getElementById('prodSum3').textContent = total3.toLocaleString('pt-BR');
-  document.getElementById('prodSumGeral').textContent = (total1 + total2 + total3).toLocaleString('pt-BR');
-  clearTimeout(_prodSaveTimer);
-  _prodSaveTimer = setTimeout(() => {
-    const lsDados = [];
-    Object.keys(dadosProdutividade).forEach(m => {
-      const d = dadosProdutividade[m];
-      lsDados.push({ mes: m, t1: d.t1 || 0, t2: d.t2 || 0, t3: d.t3 || 0 });
-    });
-    lsSetShared('SAC_PRODUTIVIDADE_dados', lsDados);
-  }, 300);
+  garantirIds(dadosProdutividade);
+  if (fbDisponivel() && cdAtual) {
+    fbOnSnapshotColecao('produtividade', dadosProdutividade);
+  }
 }
 
 async function salvarProdutividade() {
-  var lsDados = [];
-  MESES.forEach(function (mes) {
-    if (dadosProdutividade[mes]) {
-      var registro = { mes: mes, t1: dadosProdutividade[mes].t1 || 0, t2: dadosProdutividade[mes].t2 || 0, t3: dadosProdutividade[mes].t3 || 0 };
-      lsDados.push(registro);
-    }
-  });
-  lsSetShared('SAC_PRODUTIVIDADE_dados', lsDados);
-  await fbSalvarProdutividade();
-  toast('Produtividade salva!', 'success');
+  lsSetCd('PRODUTIVIDADE_dados', dadosProdutividade);
+  clearTimeout(_fbTimerProd);
+  _fbTimerProd = setTimeout(function () { fbSalvarColecao('produtividade', dadosProdutividade); }, 3000);
 }
 
-function gerarPdfProdutividade() {
-  document.body.classList.add('prod-printing');
-  setTimeout(() => {
-    const titleBkp = document.title;
-    document.title = 'Produtividade ' + cdAtual + ' - ' + MESES[hoje.getMonth()] + ' ' + hoje.getFullYear();
-    window.print();
-    document.title = titleBkp;
-    setTimeout(() => document.body.classList.remove('prod-printing'), 500);
-  }, 300);
+function getDataSelecionada() {
+  const headerEl = document.getElementById('produtividadeHeader');
+  if (!headerEl) return null;
+  const ds = headerEl.dataset;
+  return ds.dataAtual || null;
+}
+
+function getSemanaSelecionada() {
+  const headerEl = document.getElementById('produtividadeHeader');
+  if (!headerEl) return null;
+  const ds = headerEl.dataset;
+  return ds.semanaAtual || null;
+}
+
+function renderizarProdutividade() {
+  const dataAtual = getDataSelecionada();
+  const semanaAtual = getSemanaSelecionada();
+  if (!dataAtual || !semanaAtual) return;
+
+  const dadosSemana = (dadosProdutividade || []).filter(d => d.semana === semanaAtual);
+  const usuariosSemana = usuarios.filter(u => u !== 'Administrador');
+  const diasSemana = GERAR_DIAS_SEMANA(dataAtual);
+
+  const table = document.getElementById('produtividadeTable');
+  if (!table) return;
+  const thead = table.querySelector('thead tr');
+  const tbody = table.querySelector('tbody');
+
+  thead.innerHTML = '<th class="th-user">USU\u00c1RIO</th>' +
+    diasSemana.map(function (d, i) {
+      const isHoje = d.data === new Date().toISOString().slice(0, 10);
+      const isSabado = i === 5;
+      const style = isHoje ? 'class="th-hoje"' : (isSabado ? 'class="th-sabado"' : '');
+      return '<th ' + style + '>' + d.dia + '<br><small>' + d.data.split('-').reverse().slice(0, 2).join('/') + '</small></th>';
+    }).join('') +
+    '<th class="th-total">TOTAL</th>' +
+    '<th class="th-acoes"></th>';
+
+  tbody.innerHTML = '';
+  usuariosSemana.forEach(function (user) {
+    const tr = document.createElement('tr');
+    tr.dataset.user = user;
+    const tdUser = document.createElement('td');
+    tdUser.className = 'td-user';
+    tdUser.textContent = user;
+    tr.appendChild(tdUser);
+
+    let totalDias = 0;
+    diasSemana.forEach(function (dia) {
+      const td = document.createElement('td');
+      td.className = 'td-prod';
+      td.dataset.user = user;
+      td.dataset.data = dia.data;
+      td.dataset.semana = semanaAtual;
+
+      const registro = dadosSemana.find(function (r) {
+        return r.usuario === user && r.data === dia.data;
+      });
+      const valor = registro ? registro.valor : '';
+      const cor = registro ? (registro.cor || '') : '';
+
+      td.textContent = valor;
+      td.style.background = cor || 'transparent';
+
+      td.onclick = function () {
+        abrirModalProdutividade(user, dia.data, semanaAtual, td);
+      };
+
+      if (dia.data === new Date().toISOString().slice(0, 10)) td.classList.add('hoje');
+      if (dia.dia === 'S\u00e1b') td.style.background = '#f8f9fa';
+
+      tr.appendChild(td);
+      if (valor) totalDias += Number(valor) || 0;
+    });
+
+    const tdTotal = document.createElement('td');
+    tdTotal.className = 'td-total';
+    tdTotal.textContent = totalDias || '';
+    tr.appendChild(tdTotal);
+
+    const tdAcoes = document.createElement('td');
+    tdAcoes.className = 'td-acoes';
+    tr.appendChild(tdAcoes);
+
+    tbody.appendChild(tr);
+  });
+}
+
+function atualizarProdutividadeNaTabela(user, data, semana, valor, cor) {
+  const td = document.querySelector('#produtividadeTable tbody tr[data-user="' + user + '"] td[data-data="' + data + '"]');
+  if (td) {
+    td.textContent = valor;
+    td.style.background = cor || 'transparent';
+  }
+  // Recalcula totais da linha
+  const tr = document.querySelector('#produtividadeTable tbody tr[data-user="' + user + '"]');
+  if (tr) {
+    const tds = tr.querySelectorAll('.td-prod');
+    let total = 0;
+    tds.forEach(function (td) {
+      var v = Number(td.textContent) || 0;
+      total += v;
+    });
+    var tdTotal = tr.querySelector('.td-total');
+    if (tdTotal) tdTotal.textContent = total || '';
+  }
+}
+
+function abrirModalProdutividade(user, data, semana, tdEl) {
+  const registro = (dadosProdutividade || []).find(function (r) {
+    return r.usuario === user && r.data === data;
+  });
+  const valorAtual = registro ? registro.valor : '';
+  const corAtual = registro ? (registro.cor || '') : '';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = function () { overlay.remove(); };
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-content';
+  modal.onclick = function (e) { e.stopPropagation(); };
+  modal.innerHTML =
+    '<h3 style="margin-bottom:20px">' + escapeHtml(user) + ' \u00b7 ' + formatDateBR(data) + '</h3>' +
+    '<div class="prod-modal-body">' +
+      '<div class="prod-modal-setors">' +
+        '<div class="prod-cor-btn" data-cor="#4CAF50" style="background:#4CAF50">P\u00e1tio</div>' +
+        '<div class="prod-cor-btn" data-cor="#2196F3" style="background:#2196F3">Docas</div>' +
+        '<div class="prod-cor-btn" data-cor="#FF9800" style="background:#FF9800">Expedi\u00e7\u00e3o</div>' +
+        '<div class="prod-cor-btn" data-cor="#9C27B0" style="background:#9C27B0">Confer\u00eancia</div>' +
+        '<div class="prod-cor-btn" data-cor="#607D8B" style="background:#607D8B">Admin</div>' +
+        '<div class="prod-cor-btn" data-cor="#795548" style="background:#795548">Opera\u00e7\u00e3o</div>' +
+        '<div class="prod-cor-btn" data-cor="#E91E63" style="background:#E91E63">Manuten\u00e7\u00e3o</div>' +
+        '<div class="prod-cor-btn" data-cor="#00BCD4" style="background:#00BCD4">Qualidade</div>' +
+        '<div class="prod-cor-btn" data-cor="#FF5722" style="background:#FF5722">Seguran\u00e7a</div>' +
+        '<div class="prod-cor-btn" data-cor="#8BC34A" style="background:#8BC34A">Limpeza</div>' +
+      '</div>' +
+      '<div class="prod-modal-inputs">' +
+        '<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Valor num\u00e9rico' +
+          '<input type="number" id="prodModalValor" class="input-padrao" min="0" step="1" value="' + escapeAttr(valorAtual) + '" placeholder="0">' +
+        '</label>' +
+        '<div class="prod-modal-actions" style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">' +
+          '<button class="btn-padrao btn-secondary" id="prodModalLimpar">Limpar</button>' +
+          '<button class="btn-padrao" id="prodModalSalvar">Salvar</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  let corSelecionada = corAtual;
+
+  overlay.querySelectorAll('.prod-cor-btn').forEach(function (btn) {
+    if (btn.dataset.cor === corSelecionada) btn.classList.add('selected');
+    btn.onclick = function () {
+      overlay.querySelectorAll('.prod-cor-btn').forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      corSelecionada = btn.dataset.cor;
+    };
+  });
+
+  if (!corSelecionada) {
+    const primeiro = overlay.querySelector('.prod-cor-btn');
+    if (primeiro) { primeiro.classList.add('selected'); corSelecionada = primeiro.dataset.cor; }
+  }
+
+  modal.querySelector('#prodModalLimpar').onclick = function () {
+    dadosProdutividade = (dadosProdutividade || []).filter(function (r) {
+      return !(r.usuario === user && r.data === data);
+    });
+    salvarProdutividade();
+    atualizarProdutividadeNaTabela(user, data, semana, '', '');
+    overlay.remove();
+    toast('Valor removido', 'info');
+  };
+
+  modal.querySelector('#prodModalSalvar').onclick = function () {
+    const valorInput = modal.querySelector('#prodModalValor');
+    const val = valorInput.value.trim();
+    if (!val) { toast('Informe um valor', 'error'); return; }
+
+    var idx = dadosProdutividade.findIndex(function (r) {
+      return r.usuario === user && r.data === data;
+    });
+    if (idx >= 0) {
+      dadosProdutividade[idx].valor = val;
+      dadosProdutividade[idx].cor = corSelecionada;
+    } else {
+      dadosProdutividade.push({
+        usuario: user, data: data, semana: semana, valor: val, cor: corSelecionada
+      });
+    }
+    garantirIds(dadosProdutividade);
+    salvarProdutividade();
+    atualizarProdutividadeNaTabela(user, data, semana, val, corSelecionada);
+    overlay.remove();
+    toast('Salvo', 'success');
+  };
 }

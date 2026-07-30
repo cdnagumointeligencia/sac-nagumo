@@ -9,6 +9,9 @@ async function carregarSenhasSac() {
     dadosSenhasSac = (lsGetCd('SENHAS_SAC_dados') || []).sort(function (a, b) { return (a.senha || 0) - (b.senha || 0); });
   }
   garantirIds(dadosSenhasSac);
+  if (fbDisponivel() && cdAtual) {
+    fbOnSnapshotColecao('senhasSac', dadosSenhasSac);
+  }
 }
 
 async function salvarSenhasSac() {
@@ -30,6 +33,7 @@ function renderizarSenhasSac() {
     .map((d, i) => ({ d, i }))
     .filter(({ d }) => {
       if (extrairMesDeData(d.data) !== mesAtualSenhasSac) return false;
+      if (extrairAnoDeData(d.data) !== anoAtual) return false;
       if (busca) {
         const texto = ((d.chamado || '') + ' ' + (d.loja || '') + ' ' + (d.senha || '') + ' ' + (d.divergencia || '') + ' ' + (d.status || '') + ' ' + (d.observacao || '')).toLowerCase();
         if (!texto.includes(busca)) return false;
@@ -44,7 +48,7 @@ function renderizarSenhasSac() {
     td.style.padding = '32px';
     td.style.color = 'var(--text-dim)';
     td.style.fontSize = '13px';
-    td.textContent = 'Nenhuma senha SAC neste mês. Clique em "+ Senha" para começar.';
+    td.textContent = 'Nenhuma senha SAC neste m\u00eas. Clique em "+ Senha" para come\u00e7ar.';
     tr.appendChild(td);
     tbody.appendChild(tr);
     return;
@@ -68,7 +72,7 @@ function renderizarSenhasSac() {
     tdAcoes.className = 'row-actions';
     const btnDel = document.createElement('button');
     btnDel.className = 'icon-btn delete';
-    btnDel.textContent = '🗑';
+    btnDel.textContent = '\uD83D\uDDD1';
     btnDel.title = 'Excluir';
     btnDel.onclick = function () {
       if (!confirm('Excluir esta senha?')) return;
@@ -77,7 +81,7 @@ function renderizarSenhasSac() {
       dadosSenhasSac.splice(i, 1);
       salvarSenhasSac();
       renderizarSenhasSac();
-      toast('Senha excluída', 'success');
+      toast('Senha exclu\u00edda', 'success');
     };
     tdAcoes.appendChild(btnDel);
     tr.appendChild(tdAcoes);
@@ -160,6 +164,7 @@ function adicionarSenhaSac() {
     chamado: '', loja: '', senha: String(maxSenha + 1),
     divergencia: '', status: '', responsavel: usuarioLogado || '', observacao: '', data: hoje
   });
+  garantirIds(dadosSenhasSac);
   salvarSenhasSac();
   renderizarSenhasSac();
   toast('Senha adicionada', 'success');
@@ -167,11 +172,11 @@ function adicionarSenhaSac() {
 
 function exportarSenhasSacCSV() {
   if (dadosSenhasSac.length === 0) { toast('Nenhum dado para exportar', 'error'); return; }
-  let csv = 'CHAMADO;LOJA;SENHA;DIVERGÊNCIA;STATUS;RESPONSÁVEL;OBSERVAÇÃO;DATA\n';
+  let csv = 'CHAMADO;LOJA;SENHA;DIVERG\u00caNCIA;STATUS;RESPONS\u00c1VEL;OBSERVA\u00c7\u00c3O;DATA\n';
   dadosSenhasSac.forEach(d => {
     csv += [d.chamado, d.loja, d.senha, d.divergencia, d.status, d.responsavel, d.observacao, d.data].map(csvEscape).join(';') + '\n';
   });
-  baixarArquivo(csv, `Senhas_SAC_${formatDate(new Date())}.csv`, 'text/csv');
+  baixarArquivo(csv, 'Senhas_SAC_' + formatDate(new Date()) + '.csv', 'text/csv');
   toast('CSV exportado', 'success');
 }
 

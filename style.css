@@ -124,6 +124,10 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
+    .ano-label { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-right: 6px; }
+    .ano-nav { background: none; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; padding: 1px 6px; font-size: 0.75rem; color: var(--text-soft); }
+    .ano-nav:hover { background: var(--secondary-dim); }
+
 .cd1-active .col-braco { display: none !important; }
   .cd1-active .col-observacao { display: none !important; }
   .cd1-active .col-observacao-cd2 { display: none !important; }
@@ -1153,7 +1157,43 @@
     letter-spacing: 1px; color: rgba(1,33,67,0.45); margin-bottom: 8px;
     font-family: 'JetBrains Mono', monospace;
   }
-  .login-cd-options { display: flex; gap: 10px; }
+  /* Sync status indicator */
+.sync-status {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: 9999;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.sync-status.ok {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.sync-status.syncing {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde68a;
+  animation: pulse-sync 1s ease-in-out infinite;
+}
+.sync-status.error {
+  background: #fce4ec;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+@keyframes pulse-sync {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.login-cd-options { display: flex; gap: 10px; }
   .login-cd-card {
     flex: 1; padding: 14px 0; border: 2px solid rgba(1,33,67,0.12);
     border-radius: 10px 4px 10px 4px; background: #FAFBFC;

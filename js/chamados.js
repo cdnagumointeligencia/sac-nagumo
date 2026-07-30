@@ -179,11 +179,11 @@ function criarLinha(d, idx) {
   inpBraco.value = d.braco || '';
   inpBraco.placeholder = '-';
   inpBraco.disabled = d.setor !== 'Sorter';
-  inpBraco.onchange = () => {
-    let v = parseInt(inpBraco.value);
+  inpBraco.onchange = function () {
+    var v = parseInt(inpBraco.value);
     if (inpBraco.value && (v < 1 || v > 11)) {
-      toast('Braço deve ser entre 1 e 11', 'error');
-      inpBraco.value = '';
+      toast('Bra\u00e7o deve ser entre 1 e 11', 'error');
+      inpBraco.value = dadosMes[mesAtual][idx].braco || '';
       return;
     }
     dadosMes[mesAtual][idx].braco = inpBraco.value;
@@ -267,27 +267,40 @@ function criarCelInput(type, value, label, idx, field) {
   inp.value = value || '';
   inp.placeholder = '-';
   if (field === 'plu') inp.inputMode = 'numeric';
-  const salvar = () => {
-    if (field === 'chamado' && inp.value.trim()) {
-      const duplicado = dadosMes[mesAtual].some((d, i) => i !== idx && d.chamado === inp.value.trim());
-      if (duplicado) {
-        toast('Este número de chamado já existe!', 'error');
-        inp.value = dadosMes[mesAtual][idx].chamado || '';
-        return;
-      }
-    }
+  var salvar = function (isChamado) {
     dadosMes[mesAtual][idx][field] = inp.value;
     td.title = inp.value;
     salvarDadosMes();
     atualizarTotais();
+    if (field !== 'chamado' || isChamado) {
+      var docId = dadosMes[mesAtual][idx].id;
+      if (docId) fbAtualizarCampoChamado(docId, field, inp.value);
+    }
   };
+  if (field === 'chamado') {
+    inp.onblur = async function () {
+      if (inp.value.trim()) {
+        var localDup = dadosMes[mesAtual].some(function (d, i) { return i !== idx && d.chamado === inp.value.trim(); });
+        if (!localDup) {
+          var fbDup = await fbVerificarChamadoDuplicado(inp.value.trim(), cdAtual, mesAtual);
+          if (fbDup) { localDup = true; }
+        }
+        if (localDup) {
+          toast('N\u00famero de chamado j\u00e1 existe no sistema!', 'error');
+          inp.value = dadosMes[mesAtual][idx].chamado || '';
+          return;
+        }
+      }
+      salvar(true);
+    };
+  }
   inp.oninput = function() {
     if (type === 'text') {
       const start = inp.selectionStart;
       inp.value = capitalizarPalavras(inp.value);
       if (start != null) inp.setSelectionRange(start, start);
     }
-    salvar();
+    if (field !== 'chamado') salvar(false);
   };
   td.appendChild(inp);
   return td;
@@ -304,13 +317,15 @@ function criarCelSelect(options, value, idx, field) {
     if (v === value) opt.selected = true;
     sel.appendChild(opt);
   });
-  const salvar = () => {
+  var salvar = async function () {
     dadosMes[mesAtual][idx][field] = sel.value;
     td.title = sel.value;
     salvarDadosMes();
     atualizarTotais();
-    if (field === 'observacao' && ['Solicitar nota de devolução', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão'].includes(sel.value)) {
-      criarNotaDevAutomatica(dadosMes[mesAtual][idx]);
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) fbAtualizarCampoChamado(docId, field, sel.value);
+    if (field === 'observacao' && fbCamposQueGeramNotaDev().includes(sel.value)) {
+      await criarNotaDevAutomatica(dadosMes[mesAtual][idx]);
     }
   };
   sel.onchange = salvar;
@@ -318,10 +333,13 @@ function criarCelSelect(options, value, idx, field) {
   return td;
 }
 
-function criarNotaDevAutomatica(chamado) {
-  const jaExiste = dadosNotasDev.some(n => n.chamado === chamado.chamado && n.loja === chamado.loja);
+async function criarNotaDevAutomatica(chamado) {
+  var jaExiste = dadosNotasDev.some(function (n) { return n.chamado === chamado.chamado && n.loja === chamado.loja; });
+  if (!jaExiste) {
+    jaExiste = await fbVerificarNotaDevDuplicada(chamado.chamado, chamado.loja);
+  }
   if (jaExiste) {
-    toast('Nota de devolução já existe para este chamado', 'error');
+    toast('Nota de devolu\u00e7\u00e3o j\u00e1 existe para este chamado no sistema', 'error');
     return;
   }
   const hoje = new Date().toISOString().split('T')[0];
@@ -335,8 +353,9 @@ function criarNotaDevAutomatica(chamado) {
     statusNf: 'Aguardando',
     observacao: ''
   });
+  garantirIds(dadosNotasDev);
   salvarNotasDev();
-  toast('Nota de devolução criada automaticamente!', 'success');
+  toast('Nota de devolu\u00e7\u00e3o criada automaticamente!', 'success');
 }
 
 function atualizarUsuarioNotaDev(chamado, loja, usuario) {

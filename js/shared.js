@@ -124,6 +124,38 @@ function diasUteis(dataIni, dataFim) {
   return dias;
 }
 
+let anoAtual = new Date().getFullYear();
+var _temFocoInput = false;
+var _renderPendente = null;
+
+function registrarFocoInput() {
+  document.addEventListener('focusin', function (e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      _temFocoInput = true;
+    }
+  });
+  document.addEventListener('focusout', function (e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      _temFocoInput = false;
+      if (_renderPendente) {
+        var fn = _renderPendente;
+        _renderPendente = null;
+        fn();
+      }
+    }
+  });
+}
+registrarFocoInput();
+
+function agendarRenderSePossivel(fnRender) {
+  if (_temFocoInput) {
+    _renderPendente = fnRender;
+    return false;
+  }
+  fnRender();
+  return true;
+}
+
 function extrairMesDeData(dataStr) {
   if (!dataStr) return '';
   const parts = dataStr.split('-');
@@ -132,8 +164,24 @@ function extrairMesDeData(dataStr) {
   return MESES[mesIdx] || '';
 }
 
+function extrairAnoDeData(dataStr) {
+  if (!dataStr) return new Date().getFullYear();
+  const parts = dataStr.split('-');
+  return parseInt(parts[0], 10) || new Date().getFullYear();
+}
+
 function obterMesAtual() {
   return MESES[new Date().getMonth()];
+}
+
+function chaveMesAno(mes, ano) {
+  return mes + '/' + (ano || anoAtual);
+}
+
+function parseChaveMesAno(chave) {
+  if (!chave || !chave.includes('/')) return { mes: chave, ano: anoAtual };
+  const p = chave.split('/');
+  return { mes: p[0], ano: parseInt(p[1], 10) || anoAtual };
 }
 
 // ==================== CELULAS COMPARTILHADAS ====================
@@ -290,6 +338,7 @@ function verificarSessao() {
 }
 
 function logout() {
+  fbPararSnapshots();
   localStorage.removeItem('SAC_sessao');
   usuarioLogado = null;
   telaLogin();
@@ -347,10 +396,26 @@ async function iniciarSistema() {
 function montarAbas() {
   const container = document.getElementById('tabsMes');
   container.innerHTML = '';
-  MESES.forEach(mes => {
+  const labelAno = document.createElement('span');
+  labelAno.className = 'ano-label';
+  labelAno.textContent = anoAtual;
+  container.appendChild(labelAno);
+  const btnAnoAnt = document.createElement('button');
+  btnAnoAnt.className = 'ano-nav';
+  btnAnoAnt.textContent = '\u25C0';
+  btnAnoAnt.title = 'Ano anterior';
+  btnAnoAnt.onclick = function (e) { e.stopPropagation(); alterarAno(-1); };
+  container.appendChild(btnAnoAnt);
+  const btnAnoProx = document.createElement('button');
+  btnAnoProx.className = 'ano-nav';
+  btnAnoProx.textContent = '\u25B6';
+  btnAnoProx.title = 'Pr\u00f3ximo ano';
+  btnAnoProx.onclick = function (e) { e.stopPropagation(); alterarAno(1); };
+  container.appendChild(btnAnoProx);
+  MESES.forEach(function (mes) {
     const btn = document.createElement('button');
     btn.textContent = mes.slice(0, 3);
-    btn.onclick = () => selecionarMes(mes);
+    btn.onclick = function () { selecionarMes(mes); };
     if (mes === mesAtual) btn.classList.add('active');
     container.appendChild(btn);
   });
@@ -374,13 +439,42 @@ function montarAbasGenerico(containerId, mesAtualVar, funcaoSelecionar) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.innerHTML = '';
-  MESES.forEach(mes => {
+  const labelAno = document.createElement('span');
+  labelAno.className = 'ano-label';
+  labelAno.textContent = anoAtual;
+  container.appendChild(labelAno);
+  const btnAnoAnt = document.createElement('button');
+  btnAnoAnt.className = 'ano-nav';
+  btnAnoAnt.textContent = '\u25C0';
+  btnAnoAnt.title = 'Ano anterior';
+  btnAnoAnt.onclick = function (e) { e.stopPropagation(); alterarAno(-1); };
+  container.appendChild(btnAnoAnt);
+  const btnAnoProx = document.createElement('button');
+  btnAnoProx.className = 'ano-nav';
+  btnAnoProx.textContent = '\u25B6';
+  btnAnoProx.title = 'Pr\u00f3ximo ano';
+  btnAnoProx.onclick = function (e) { e.stopPropagation(); alterarAno(1); };
+  container.appendChild(btnAnoProx);
+  MESES.forEach(function (mes) {
     const btn = document.createElement('button');
     btn.textContent = mes.slice(0, 3);
-    btn.onclick = () => funcaoSelecionar(mes);
+    btn.onclick = function () { funcaoSelecionar(mes); };
     if (mes === mesAtualVar) btn.classList.add('active');
     container.appendChild(btn);
   });
+}
+
+function alterarAno(delta) {
+  anoAtual += delta;
+  document.querySelectorAll('.ano-label').forEach(function (el) { el.textContent = anoAtual; });
+  var page = document.querySelector('.page.active');
+  if (page) {
+    if (page.id === 'pageSenhaSac') { montarAbasGenerico('tabsMesSenhasSac', mesAtualSenhasSac, selecionarMesSenhasSac); renderizarSenhasSac(); }
+    else if (page.id === 'pageNotasDevolucao') { montarAbasGenerico('tabsMesNotasDev', mesAtualNotasDev, selecionarMesNotasDev); renderizarNotasDevolucao(); }
+    else if (page.id === 'pageMercadoriasNF') { montarAbasGenerico('tabsMesMercadoriasNF', mesAtualMercadoriasNF, selecionarMesMercadoriasNF); renderizarMercadoriasNF(); }
+    else if (page.id === 'pageDashboard') { montarAbasGenerico('tabsMesDash', mesAtualDash, selecionarMesDash); atualizarDashboard(); }
+    else if (page.id === 'pageChamados') { montarAbas(); renderizarTabela(); atualizarTotais(); }
+  }
 }
 
 // ==================== CARREGAMENTO ====================

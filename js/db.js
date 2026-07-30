@@ -19,7 +19,6 @@ function lsSet(chave, valor) {
   try { localStorage.setItem(lsKey(chave), JSON.stringify(valor)); } catch (e) { console.warn('localStorage save error:', e); }
 }
 
-// Helpers para chaves compartilhadas (não dependem de CD)
 function lsGetShared(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
 }
@@ -27,7 +26,6 @@ function lsSetShared(key, valor) {
   try { localStorage.setItem(key, JSON.stringify(valor)); } catch (e) { console.warn('localStorage save error:', e); }
 }
 
-// Helpers para dados CD-específicos (com migração automática)
 function lsGetCd(chave) {
   const cdKey = 'SAC_' + cdAtual + '_' + chave;
   try {
@@ -50,35 +48,13 @@ function lsSetCd(chave, valor) {
   try { localStorage.setItem(cdKey, JSON.stringify(valor)); } catch (e) { console.warn('localStorage save error:', e); }
 }
 
-// Helpers para dados CD-específicos com chave customizada (sem prefixo SAC_)
-function lsGetCdRaw(chave) {
-  const cdKey = cdAtual + '_' + chave;
-  try {
-    const cdDados = JSON.parse(localStorage.getItem(cdKey));
-    if (cdDados !== null) return cdDados;
-  } catch {}
-  try {
-    const sharedDados = JSON.parse(localStorage.getItem(chave));
-    if (sharedDados !== null) {
-      localStorage.setItem(cdKey, JSON.stringify(sharedDados));
-      return sharedDados;
-    }
-  } catch {}
-  return null;
-}
-
-function lsSetCdRaw(chave, valor) {
-  const cdKey = cdAtual + '_' + chave;
-  try { localStorage.setItem(cdKey, JSON.stringify(valor)); } catch (e) { console.warn('localStorage save error:', e); }
-}
-
 function normalizarRegistros(registros) {
   if (Array.isArray(registros)) return registros;
   if (registros && typeof registros === 'object') return Object.values(registros);
   return [];
 }
 
-// ==================== FIRESTORE SYNC ====================
+// ==================== FIRESTORE SYNC HELPERS ====================
 function gerarId() {
   return Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);
 }
@@ -94,24 +70,20 @@ function garantirIds(arr) {
   return mudou;
 }
 
-// Chamados: carregar de Firestore, fallback localStorage
-async function fbCarregarChamados() {
-  if (!fbDisponivel() || !cdAtual) return false;
-  var ano = new Date().getFullYear();
-  var resultados = await fbQuery('chamados', [
-    ['cd', '==', cdAtual],
-    ['ano', '==', ano],
-    ['ativo', '==', true]
-  ]);
-  if (!resultados || resultados.length === 0) return false;
+// ==================== CHAMADOS: onSnapshot + Write ====================
+var _fbTimerChamados = null;
+var _snapChamados = null;
+var _chamadosInicialResolve = null;
 
+function fbMontarDadosMes(resultados) {
   var fbDadosMes = {};
+  var currentYear = new Date().getFullYear();
   resultados.forEach(function (r) {
     var mesNome = r.mesNome || '';
     if (!mesNome && r.mes !== undefined && r.mes >= 0) mesNome = MESES[r.mes] || '';
     if (!mesNome) return;
     if (!fbDadosMes[mesNome]) fbDadosMes[mesNome] = [];
-    var item = {
+    var obj = {
       id: r.id || r.firestoreId,
       chamado: r.chamado || '',
       loja: r.loja || '',
@@ -125,13 +97,43 @@ async function fbCarregarChamados() {
       conferente: r.conferente || '',
       usuario: r.usuario || '',
       dataAbertura: r.dataAbertura || '',
-      dataFechamento: r.dataFechamento || ''
+      dataFechamento: r.dataFechamento || '',
+      ano: r.ano !== undefined ? r.ano : (r.dataAbertura ? extrairAnoDeData(r.dataAbertura) : currentYear)
     };
-    fbDadosMes[mesNome].push(item);
+    fbDadosMes[mesNome].push(obj);
+  });
+  return fbDadosMes;
+}
+
+async function fbCarregarChamados() {
+  if (!fbDisponivel() || !cdAtual) return new Promise(function (r) { r(false); });
+
+  var ano = new Date().getFullYear();
+  var p = new Promise(function (resolve) {
+    _chamadosInicialResolve = resolve;
+
+    _snapChamados = fbOnSnapshot('chamados', [
+      ['cd', '==', cdAtual],
+      ['ano', '==', ano],
+      ['ativo', '==', true]
+    ], function (resultados) {
+      var fbDadosMes = fbMontarDadosMes(resultados);
+      dadosMes = fbDadosMes;
+
+      if (_chamadosInicialResolve) {
+        var r = _chamadosInicialResolve;
+        _chamadosInicialResolve = null;
+        r(Object.keys(fbDadosMes).length > 0);
+      } else {
+        if (paginaAtual === 'chamados') {
+          agendarRenderSePossivel(function () { renderizarTabela(); atualizarTotais(); });
+        }
+      }
+    });
   });
 
-  dadosMes = fbDadosMes;
-  return true;
+  var ok = await p;
+  return ok;
 }
 
 async function fbSalvarChamados() {
@@ -172,7 +174,44 @@ async function fbExcluirChamado(id) {
   await fbDocDelete('chamados', id);
 }
 
-// Coleções genéricas (senhaSac, notasDev, mercadoriasNF)
+// ==================== COLEÇÕES GENÉRICAS: onSnapshot + Write ====================
+var _snapSenhas = null;
+var _snapNotas = null;
+var _snapMerc = null;
+var _snapProd = null;
+
+function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
+  var conditions = [['cd', '==', cdAtual], ['ativo', '==', true]];
+  if (extraConditions) conditions = conditions.concat(extraConditions);
+
+  return fbOnSnapshot(colecao, conditions, function (resultados) {
+    var qtdAntes = alvo.length;
+    alvo.length = 0;
+    resultados.forEach(function (r) {
+      var item = {};
+      for (var k in r) {
+        if (k !== 'firestoreId' && k !== 'cd' && k !== 'ano' && k !== 'mes' &&
+          k !== 'mesNome' && k !== 'ativo' && k !== 'criadoEm' && k !== 'criadoPor' &&
+          k !== 'alteradoEm' && k !== 'alteradoPor') {
+          item[k] = r[k];
+        }
+      }
+      if (!item.id && !item.firestoreId) item.id = r.firestoreId;
+      alvo.push(item);
+    });
+    if (resultados.length > 0) {
+      var pageMap = { senhasSac: 'senhaSac', notasDevolucao: 'notasDevolucao', mercadoriasNF: 'mercadoriasNF' };
+      var pagina = pageMap[colecao];
+      if (pagina && paginaAtual === pagina) {
+        if (pagina === 'senhaSac') agendarRenderSePossivel(renderizarSenhasSac);
+        else if (pagina === 'notasDevolucao') agendarRenderSePossivel(renderizarNotasDevolucao);
+        else if (pagina === 'mercadoriasNF') agendarRenderSePossivel(renderizarMercadoriasNF);
+      }
+    }
+    return qtdAntes !== alvo.length;
+  });
+}
+
 async function fbCarregarColecao(colecao, alvo) {
   if (!fbDisponivel() || !cdAtual) return false;
   var resultados = await fbQuery(colecao, [
@@ -212,7 +251,7 @@ async function fbExcluirItemColecao(colecao, item) {
   await fbDocDelete(colecao, docId);
 }
 
-// Produtividade
+// ==================== PRODUTIVIDADE ====================
 async function fbCarregarProdutividade() {
   if (!fbDisponivel()) return false;
   var resultados = await fbQuery('produtividade', [
@@ -255,7 +294,47 @@ async function fbSalvarProdutividade() {
   }
 }
 
-// Usuarios
+// ==================== FIELD-LEVEL UPDATE ====================
+function fbAtualizarCampoChamado(id, campo, valor) {
+  if (!fbDisponivel() || !id) return;
+  try {
+    fbDb.collection('chamados').doc(id).update({
+      [campo]: valor,
+      alteradoEm: fbTimestamp(),
+      alteradoPor: usuarioLogado || 'sistema'
+    }).catch(function (err) {
+      if (err.code === 'not-found') {
+        fbSalvarChamados();
+      }
+    });
+  } catch (e) {}
+}
+
+function fbCamposQueGeramNotaDev() {
+  return ['Solicitar nota de devolu\u00e7\u00e3o', 'Solicitar NFD e devolver invers\u00e3o', 'Solicitar NFD e Faturar invers\u00e3o'];
+}
+
+// ==================== DUPLICATA CHECK ====================
+async function fbVerificarChamadoDuplicado(numero, cd, mes) {
+  if (!numero || !fbDisponivel()) return false;
+  try {
+    var a = await fbDb.collection('chamados').where('chamado', '==', numero).where('cd', '==', cd).where('ativo', '==', true).get();
+    if (!a.empty) return true;
+    if (dadosMes[mes]) return dadosMes[mes].some(function (d) { return d.chamado === numero; });
+    return false;
+  } catch (e) { return false; }
+}
+
+async function fbVerificarNotaDevDuplicada(chamado, loja) {
+  if (!chamado || !fbDisponivel()) return false;
+  try {
+    var a = await fbDb.collection('notasDevolucao').where('chamado', '==', chamado).where('loja', '==', loja).where('ativo', '==', true).get();
+    if (!a.empty) return true;
+    return dadosNotasDev.some(function (n) { return n.chamado === chamado && n.loja === loja; });
+  } catch (e) { return false; }
+}
+
+// ==================== USUARIOS ====================
 async function fbCarregarUsuarios() {
   if (!fbDisponivel()) return false;
   var resultados = await fbQuery('usuarios', [

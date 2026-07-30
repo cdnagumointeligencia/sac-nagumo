@@ -2,6 +2,7 @@
 if (!window._beforeunloadRegistered) {
   window._beforeunloadRegistered = true;
   window.addEventListener('beforeunload', () => {
+    fbSalvarAntesSair();
     for (const mes in dadosMes) {
       const lsDados = lsGet('dados') || [];
       const idxD = lsDados.findIndex(d => d.mes === mes);
@@ -12,13 +13,8 @@ if (!window._beforeunloadRegistered) {
     lsSetCd('SENHAS_SAC_dados', dadosSenhasSac);
     lsSetCd('NOTAS_DEV_dados', dadosNotasDev);
     lsSetCd('MERCADORIAS_NF_dados', dadosMercadoriasNF);
-    if (dadosProdutividade) {
-      const lsProd = [];
-      Object.keys(dadosProdutividade).forEach(m => {
-        const d = dadosProdutividade[m];
-        lsProd.push({ mes: m, t1: d.t1 || 0, t2: d.t2 || 0, t3: d.t3 || 0 });
-      });
-      lsSetShared('SAC_PRODUTIVIDADE_dados', lsProd);
+    if (typeof dadosProdutividade !== 'undefined' && dadosProdutividade) {
+      lsSetCd('PRODUTIVIDADE_dados', dadosProdutividade);
     }
   });
 }

@@ -22,30 +22,51 @@ function contarRegistrosBackup(backup) {
   return total;
 }
 
-function contarRegistrosAtuais(cdFiltro) {
-  let total = 0;
-
-  const cds = cdFiltro ? [cdFiltro.replace('SAC_', '').replace('_dados', '')] : ['SAC_CD1', 'SAC_CD2'];
-  for (const cd of cds) {
+function _contarLocalChamados(cd) {
+  var total = 0;
+  var chaves = ['SAC_SAC_' + cd + '_dados', 'SAC_' + cd + '_dados', 'SAC_' + cd + '_SAC_dados'];
+  for (var k = 0; k < chaves.length; k++) {
     try {
-      const raw = localStorage.getItem('SAC_' + cd + '_dados');
+      var raw = localStorage.getItem(chaves[k]);
       if (raw) {
-        const arr = JSON.parse(raw);
-        arr.forEach(d => {
+        var arr = JSON.parse(raw);
+        for (var i = 0; i < arr.length; i++) {
+          var d = arr[i];
           if (Array.isArray(d.registros)) total += d.registros.length;
           else if (d.registros && typeof d.registros === 'object') total += Object.keys(d.registros).length;
-        });
+        }
+        return total;
       }
-    } catch {}
+    } catch (e) {}
+  }
+  return total;
+}
+
+function _contarLocalColecao(sufixo) {
+  var chaves = ['SAC_' + cdAtual + '_' + sufixo, 'SAC_SAC_' + cdAtual + '_' + sufixo];
+  for (var k = 0; k < chaves.length; k++) {
+    try {
+      var raw = localStorage.getItem(chaves[k]);
+      if (raw) return JSON.parse(raw).length || 0;
+    } catch (e) {}
+  }
+  return 0;
+}
+
+function contarRegistrosAtuais(cdFiltro) {
+  var cds = cdFiltro ? [cdFiltro] : ['CD1', 'CD2'];
+  var total = 0;
+
+  for (var i = 0; i < cds.length; i++) {
+    total += _contarLocalChamados(cds[i]);
   }
 
   if (!cdFiltro) {
-    try { total += (JSON.parse(localStorage.getItem('SAC_CD1_SENHAS_SAC_dados')) || []).length; } catch {}
-    try { total += (JSON.parse(localStorage.getItem('SAC_CD2_SENHAS_SAC_dados')) || []).length; } catch {}
-    try { total += (JSON.parse(localStorage.getItem('SAC_CD1_NOTAS_DEV_dados')) || []).length; } catch {}
-    try { total += (JSON.parse(localStorage.getItem('SAC_CD2_NOTAS_DEV_dados')) || []).length; } catch {}
-    try { total += (JSON.parse(localStorage.getItem('SAC_CD1_MERCADORIAS_NF_dados')) || []).length; } catch {}
-    try { total += (JSON.parse(localStorage.getItem('SAC_CD2_MERCADORIAS_NF_dados')) || []).length; } catch {}
+    for (var i = 0; i < cds.length; i++) {
+      total += _contarLocalColecao('SENHAS_SAC_dados');
+      total += _contarLocalColecao('NOTAS_DEV_dados');
+      total += _contarLocalColecao('MERCADORIAS_NF_dados');
+    }
   }
 
   return total;
@@ -53,34 +74,53 @@ function contarRegistrosAtuais(cdFiltro) {
 
 async function exportarBackupCompleto() {
   let dadosCD = [];
-  try {
-    const raw = localStorage.getItem('SAC_' + cdAtual + '_dados');
-    if (raw) dadosCD = JSON.parse(raw);
-  } catch {}
+  let senhasSac = [];
+  let notasDevolucao = [];
+  let mercadoriasNF = [];
+  let prodData = [];
+
+  if (fbDisponivel()) {
+    const fbDados = await fbCarregarTudoBackup();
+    if (fbDados && Object.keys(fbDados.chamados).length > 0) {
+      const cds = Object.keys(fbDados.chamados);
+      cds.forEach(cd => {
+        Object.keys(fbDados.chamados[cd]).forEach(mes => {
+          dadosCD.push({ mes, registros: fbDados.chamados[cd][mes] });
+        });
+      });
+    }
+    senhasSac = fbDados.senhasSac || [];
+    notasDevolucao = fbDados.notasDev || [];
+    mercadoriasNF = fbDados.mercadoriasNF || [];
+    prodData = fbDados.produtividade || [];
+  }
+
+  if (dadosCD.length === 0) {
+    try {
+      const raw = localStorage.getItem('SAC_' + cdAtual + '_dados');
+      if (raw) dadosCD = JSON.parse(raw);
+    } catch {}
+  }
   if (dadosCD.length === 0) {
     Object.keys(dadosMes).forEach(mes => {
       dadosCD.push({ mes, registros: dadosMes[mes] || [] });
     });
   }
 
-  let prodData = {};
-  try {
-    const rawProd = localStorage.getItem('SAC_PRODUTIVIDADE_dados');
-    if (rawProd) {
-      const arr = JSON.parse(rawProd);
-      arr.forEach(p => { prodData[p.mes] = { t1: p.t1 || 0, t2: p.t2 || 0, t3: p.t3 || 0 }; });
-    }
-  } catch {}
-  if (Object.keys(prodData).length === 0) {
-    prodData = { ...dadosProdutividade };
+  if (prodData.length === 0 && typeof dadosProdutividade !== 'undefined' && dadosProdutividade) {
+    prodData = dadosProdutividade;
   }
 
-  let senhasSac = [];
-  try { senhasSac = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_SENHAS_SAC_dados')) || []; } catch {}
-  let notasDevolucao = [];
-  try { notasDevolucao = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_NOTAS_DEV_dados')) || []; } catch {}
-  let mercadoriasNF = [];
-  try { mercadoriasNF = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_MERCADORIAS_NF_dados')) || []; } catch {}
+  if (senhasSac.length === 0) {
+    try { senhasSac = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_SENHAS_SAC_dados')) || []; } catch {}
+  }
+  if (notasDevolucao.length === 0) {
+    try { notasDevolucao = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_NOTAS_DEV_dados')) || []; } catch {}
+  }
+  if (mercadoriasNF.length === 0) {
+    try { mercadoriasNF = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_MERCADORIAS_NF_dados')) || []; } catch {}
+  }
+
   let bracos = {};
   try { bracos = JSON.parse(localStorage.getItem('SAC_brasConfig')) || {}; } catch {}
   let lojas = [];
@@ -140,22 +180,13 @@ async function importarBackupCompletoFile() {
       else if (isV2) dadosBackupArr = [...(backup.dadosCD1 || []), ...(backup.dadosCD2 || [])];
       else dadosBackupArr = Object.entries(backup.dados || {}).map(([mes, regs]) => ({ mes, registros: normalizarRegistros(regs) }));
 
-      const registrosBackup = contarRegistrosBackup({
-        dados: dadosBackupArr,
-        senhasSac: backup.senhasSac || [],
-        notasDevolucao: backup.notasDevolucao || [],
-        mercadoriasNF: backup.mercadoriasNF || []
-      });
-      const registrosAtuais = isV3 ? contarRegistrosAtuais(backup.cd) : contarRegistrosAtuais();
-
-      if (registrosBackup < registrosAtuais) {
-        toast(
-          'BLOQUEADO: Backup tem ' + registrosBackup + ' registros, sistema atual tem ' + registrosAtuais + '. ' +
-          'Importe um backup igual ou maior.',
-          'error'
-        );
-        document.getElementById('jsonInput').value = '';
-        return;
+      if (backup.versao === 3 && backup.dataBackup) {
+        var dataBackup = new Date(backup.dataBackup);
+        var diasAtras = (new Date() - dataBackup) / 86400000;
+        if (diasAtras > 90) {
+          var confirma = confirm('Este backup tem mais de 90 dias (' + Math.round(diasAtras) + ' dias). Deseja importar mesmo assim?');
+          if (!confirma) { document.getElementById('jsonInput').value = ''; return; }
+        }
       }
 
       todosUsuarios = backup.usuarios || [];
@@ -201,15 +232,52 @@ async function importarBackupCompletoFile() {
       lsSetCd('NOTAS_DEV_dados', dadosNotasDev);
       lsSetCd('MERCADORIAS_NF_dados', dadosMercadoriasNF);
       if (dadosProdutividade) {
-        const lsProd = [];
-        Object.keys(dadosProdutividade).forEach(m => {
-          const d = dadosProdutividade[m];
-          lsProd.push({ mes: m, t1: d.t1 || 0, t2: d.t2 || 0, t3: d.t3 || 0 });
-        });
-        lsSetShared('SAC_PRODUTIVIDADE_dados', lsProd);
+        lsSetCd('PRODUTIVIDADE_dados', dadosProdutividade);
       }
       try { localStorage.setItem('SAC_brasConfig', JSON.stringify(bracosConfig)); } catch {}
       try { localStorage.setItem('SAC_LOJAS_MERCADORIAS', JSON.stringify(lojasMercadorias)); } catch {}
+
+      if (fbDisponivel()) {
+        Object.keys(dadosMes).forEach(mes => {
+          const regs = normalizarRegistros(dadosMes[mes]);
+          regs.forEach(r => {
+            if (r && r.id) {
+              try {
+                fbDb.collection('chamados').doc(r.id).set(
+                  fbDataComAuditoria(r, { cd: cdAtual, mesNome: mes }),
+                  { merge: true }
+                );
+              } catch (e) {}
+            }
+          });
+        });
+        dadosSenhasSac.forEach(item => {
+          const docId = item.id || item.firestoreId;
+          if (docId) {
+            try { fbDb.collection('senhasSac').doc(docId).set(fbDataComAuditoria(item, { cd: cdAtual }), { merge: true }); } catch (e) {}
+          }
+        });
+        dadosNotasDev.forEach(item => {
+          const docId = item.id || item.firestoreId;
+          if (docId) {
+            try { fbDb.collection('notasDevolucao').doc(docId).set(fbDataComAuditoria(item, { cd: cdAtual }), { merge: true }); } catch (e) {}
+          }
+        });
+        dadosMercadoriasNF.forEach(item => {
+          const docId = item.id || item.firestoreId;
+          if (docId) {
+            try { fbDb.collection('mercadoriasNF').doc(docId).set(fbDataComAuditoria(item, { cd: cdAtual }), { merge: true }); } catch (e) {}
+          }
+        });
+        if (typeof dadosProdutividade !== 'undefined' && dadosProdutividade) {
+          dadosProdutividade.forEach(function (item) {
+            var docId = item.id || item.firestoreId;
+            if (docId) {
+              try { fbDb.collection('produtividade').doc(docId).set(fbDataComAuditoria(item, { cd: cdAtual }), { merge: true }); } catch (e) {}
+            }
+          });
+        }
+      }
 
       renderizarTabela();
       atualizarTotais();

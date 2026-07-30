@@ -9,6 +9,9 @@ async function carregarNotasDev() {
     dadosNotasDev = lsGetCd('NOTAS_DEV_dados') || [];
   }
   garantirIds(dadosNotasDev);
+  if (fbDisponivel() && cdAtual) {
+    fbOnSnapshotColecao('notasDevolucao', dadosNotasDev);
+  }
 }
 
 async function salvarNotasDev() {
@@ -27,7 +30,7 @@ function renderizarNotasDevolucao() {
   tbody.innerHTML = '';
   const filtrados = dadosNotasDev
     .map((d, i) => ({ d, i }))
-    .filter(({ d }) => extrairMesDeData(d.data) === mesAtualNotasDev);
+    .filter(({ d }) => extrairMesDeData(d.data) === mesAtualNotasDev && extrairAnoDeData(d.data) === anoAtual);
   if (filtrados.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
@@ -36,7 +39,7 @@ function renderizarNotasDevolucao() {
     td.style.padding = '32px';
     td.style.color = 'var(--text-dim)';
     td.style.fontSize = '13px';
-    td.textContent = 'Nenhuma nota de devolução neste mês. Clique em "+ Nota" para começar.';
+    td.textContent = 'Nenhuma nota de devolu\u00e7\u00e3o neste m\u00eas. Clique em "+ Nota" para come\u00e7ar.';
     tr.appendChild(td);
     tbody.appendChild(tr);
     return;
@@ -61,7 +64,7 @@ function renderizarNotasDevolucao() {
     tdAcoes.className = 'row-actions';
     const btnDel = document.createElement('button');
     btnDel.className = 'icon-btn delete';
-    btnDel.textContent = '🗑';
+    btnDel.textContent = '\uD83D\uDDD1';
     btnDel.title = 'Excluir';
     btnDel.onclick = function () {
       if (!confirm('Excluir esta nota?')) return;
@@ -70,7 +73,7 @@ function renderizarNotasDevolucao() {
       dadosNotasDev.splice(i, 1);
       salvarNotasDev();
       renderizarNotasDevolucao();
-      toast('Nota excluída', 'success');
+      toast('Nota exclu\u00edda', 'success');
     };
     tdAcoes.appendChild(btnDel);
     tr.appendChild(tdAcoes);
@@ -117,7 +120,6 @@ function criarCelInputNotaDevNota(idx, value) {
     }
     const tr = inp.closest('tr');
     if (tr) {
-      const statusTd = tr.querySelector('td:last-of-type');
       const statusTds = tr.querySelectorAll('td');
       for (const cell of statusTds) {
         if (cell.textContent === 'Aguardando' || cell.textContent === 'Emitida') {
@@ -182,6 +184,7 @@ function adicionarNotaDevolucao() {
     chamado: '', loja: '', plu: '', data: hoje,
     nota: '', usuario: '', statusNf: 'Aguardando', observacao: ''
   });
+  garantirIds(dadosNotasDev);
   salvarNotasDev();
   renderizarNotasDevolucao();
   toast('Nota adicionada', 'success');
@@ -189,10 +192,10 @@ function adicionarNotaDevolucao() {
 
 function exportarNotasDevCSV() {
   if (dadosNotasDev.length === 0) { toast('Nenhum dado para exportar', 'error'); return; }
-  let csv = 'CHAMADO;LOJA;PLU;DATA;NOTA;USUÁRIO;STATUS NF;OBSERVAÇÃO\n';
+  let csv = 'CHAMADO;LOJA;PLU;DATA;NOTA;USU\u00c1RIO;STATUS NF;OBSERVA\u00c7\u00c3O\n';
   dadosNotasDev.forEach(d => {
     csv += [d.chamado, d.loja, d.plu, d.data, d.nota, d.usuario, d.statusNf, d.observacao].map(csvEscape).join(';') + '\n';
   });
-  baixarArquivo(csv, `Notas_Devolucao_${formatDate(new Date())}.csv`, 'text/csv');
+  baixarArquivo(csv, 'Notas_Devolucao_' + formatDate(new Date()) + '.csv', 'text/csv');
   toast('CSV exportado', 'success');
 }

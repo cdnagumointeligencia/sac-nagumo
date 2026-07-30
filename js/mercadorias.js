@@ -12,6 +12,9 @@ async function carregarMercadoriasNF() {
     dadosMercadoriasNF = lsGetCd('MERCADORIAS_NF_dados') || [];
   }
   garantirIds(dadosMercadoriasNF);
+  if (fbDisponivel() && cdAtual) {
+    fbOnSnapshotColecao('mercadoriasNF', dadosMercadoriasNF);
+  }
 }
 
 async function salvarMercadoriasNF() {
@@ -36,7 +39,7 @@ function renderizarMercadoriasNF() {
   tbody.innerHTML = '';
   const filtrados = dadosMercadoriasNF
     .map((d, i) => ({ d, i }))
-    .filter(({ d }) => extrairMesDeData(d.data) === mesAtualMercadoriasNF);
+    .filter(({ d }) => extrairMesDeData(d.data) === mesAtualMercadoriasNF && extrairAnoDeData(d.data) === anoAtual);
   if (filtrados.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
@@ -45,7 +48,7 @@ function renderizarMercadoriasNF() {
     td.style.padding = '32px';
     td.style.color = 'var(--text-dim)';
     td.style.fontSize = '13px';
-    td.textContent = 'Nenhum registro neste mês. Clique em "+ Registro" para começar.';
+    td.textContent = 'Nenhum registro neste m\u00eas. Clique em "+ Registro" para come\u00e7ar.';
     tr.appendChild(td);
     tbody.appendChild(tr);
     return;
@@ -70,7 +73,7 @@ function renderizarMercadoriasNF() {
     tdAcoes.className = 'row-actions';
     const btnDel = document.createElement('button');
     btnDel.className = 'icon-btn delete';
-    btnDel.textContent = '🗑';
+    btnDel.textContent = '\uD83D\uDDD1';
     btnDel.title = 'Excluir';
     btnDel.onclick = function () {
       if (!confirm('Excluir este registro?')) return;
@@ -79,7 +82,7 @@ function renderizarMercadoriasNF() {
       dadosMercadoriasNF.splice(i, 1);
       salvarMercadoriasNF();
       renderizarMercadoriasNF();
-      toast('Registro excluído', 'success');
+      toast('Registro exclu\u00eddo', 'success');
     };
     tdAcoes.appendChild(btnDel);
     tr.appendChild(tdAcoes);
@@ -217,6 +220,7 @@ function adicionarMercadoriaNF() {
     data: hoje, empresa: '', master: '', qntNotas: '', qntPaletes: '',
     loja: '', volume: '', tipoVolume: '', qtdPlu: '', conferente: '', turno: ''
   });
+  garantirIds(dadosMercadoriasNF);
   salvarMercadoriasNF();
   renderizarMercadoriasNF();
   toast('Registro adicionado', 'success');
@@ -234,14 +238,14 @@ function renderizarDashboardMerc() {
   if (!dashMercCD) dashMercCD = cdAtual;
   const empresasCD = getEmpresasPorCD(dashMercCD);
   const registros = (dadosMercadoriasNF || []).filter(d =>
-    empresasCD.includes(d.empresa) && extrairMesDeData(d.data) === mesAtualMercadoriasNF
+    empresasCD.includes(d.empresa) && extrairMesDeData(d.data) === mesAtualMercadoriasNF && extrairAnoDeData(d.data) === anoAtual
   );
-  document.getElementById('dmEmpresaLabel').innerHTML = `${escapeHtml(dashMercCD)} · ${MESES[(new Date()).getMonth()]} ${(new Date()).getFullYear()}`;
+  document.getElementById('dmEmpresaLabel').innerHTML = escapeHtml(dashMercCD) + ' \u00b7 ' + MESES[(new Date()).getMonth()] + ' ' + (new Date()).getFullYear();
 
   if (registros.length === 0) {
     document.getElementById('dmKpiRow').innerHTML = '';
     document.getElementById('dmEmpresaGrid').innerHTML = '';
-    document.getElementById('dmRankList').innerHTML = '<p style="text-align:center;color:var(--dash-text-dimmer);padding:32px">Nenhum registro encontrado para este CD no período selecionado.</p>';
+    document.getElementById('dmRankList').innerHTML = '<p style="text-align:center;color:var(--dash-text-dimmer);padding:32px">Nenhum registro encontrado para este CD no per\u00edodo selecionado.</p>';
     document.getElementById('dmChipsConferente').innerHTML = '';
     document.getElementById('dmTurnoTrack').innerHTML = '';
     document.getElementById('dmTurnoLegend').innerHTML = '';
@@ -287,7 +291,7 @@ function renderizarDashboardMerc() {
     a.paletes += Number(r.qntPaletes) || 0;
     a.volume += Number(r.volume) || 0;
     a.plu += Number(r.qtdPlu) || 0;
-    const tipo = r.tipoVolume || 'Não informado';
+    const tipo = r.tipoVolume || 'N\u00e3o informado';
     a.porTipo[tipo] = (a.porTipo[tipo] || 0) + (Number(r.volume) || 0);
     return a;
   }, { notas: 0, paletes: 0, volume: 0, plu: 0, porTipo: {} });
@@ -300,7 +304,7 @@ function renderizarDashboardMerc() {
     const paletes = rows.reduce((s, r) => s + (Number(r.qntPaletes) || 0), 0);
     const porTipo = {};
     rows.forEach(r => {
-      const tipo = r.tipoVolume || 'Não informado';
+      const tipo = r.tipoVolume || 'N\u00e3o informado';
       porTipo[tipo] = (porTipo[tipo] || 0) + (Number(r.volume) || 0);
     });
     const totalRegistros = rows.length;
@@ -312,7 +316,7 @@ function renderizarDashboardMerc() {
     const volume = rows.reduce((s, r) => s + (Number(r.volume) || 0), 0);
     const porTipo = {};
     rows.forEach(r => {
-      const tipo = r.tipoVolume || 'Não informado';
+      const tipo = r.tipoVolume || 'N\u00e3o informado';
       porTipo[tipo] = (porTipo[tipo] || 0) + (Number(r.volume) || 0);
     });
     return { turno: t, volume, porTipo };
@@ -324,7 +328,7 @@ function renderizarDashboardMerc() {
     const responsaveis = [...new Set(rows.map(r => norm(r.conferente)))];
     const porTipo = {};
     rows.forEach(r => {
-      const tipo = r.tipoVolume || 'Não informado';
+      const tipo = r.tipoVolume || 'N\u00e3o informado';
       porTipo[tipo] = (porTipo[tipo] || 0) + (Number(r.volume) || 0);
     });
     return { loja: l, volume, responsaveis, porTipo };
@@ -332,92 +336,63 @@ function renderizarDashboardMerc() {
 
   const tipoEntries = Object.entries(totals.porTipo).sort((a, b) => b[1] - a[1]);
   const kpiItems = [
-    { lbl: 'Notas enviadas', val: totals.notas, sub: 'total do período' },
+    { lbl: 'Notas enviadas', val: totals.notas, sub: 'total do per\u00edodo' },
     { lbl: 'Total paletes', val: totals.paletes, sub: 'paletes conferidos' },
     ...tipoEntries.map(([tipo, vol]) => ({
       lbl: tipo, val: vol, unit: tipo === 'Kilo' ? 'kg' : tipo === 'Caixas' ? 'cx' : 'un.',
-      sub: `${((vol / (totals.volume || 1)) * 100).toFixed(1)}% do total`
+      sub: ((vol / (totals.volume || 1)) * 100).toFixed(1) + '% do total'
     })),
     { lbl: 'Qtd. PLU', val: totals.plu, sub: 'produtos distintos' },
-    { lbl: 'Lojas atendidas', val: porLoja.length, sub: `${registros.length} registros` }
+    { lbl: 'Lojas atendidas', val: porLoja.length, sub: registros.length + ' registros' }
   ];
-  document.getElementById('dmKpiRow').style.gridTemplateColumns = `repeat(${Math.min(kpiItems.length, 8)}, 1fr)`;
-  document.getElementById('dmKpiRow').innerHTML = kpiItems.map(i => `
-    <div class="dm-kpi">
-      <div class="lbl">${i.lbl}</div>
-      <div class="val">${i.val}${i.unit ? `<span class="unit">${i.unit}</span>` : ''}</div>
-      <div class="sub">${i.sub}</div>
-    </div>`).join('');
+  document.getElementById('dmKpiRow').style.gridTemplateColumns = 'repeat(' + Math.min(kpiItems.length, 8) + ', 1fr)';
+  document.getElementById('dmKpiRow').innerHTML = kpiItems.map(function (i) {
+    return '<div class="dm-kpi"><div class="lbl">' + i.lbl + '</div><div class="val">' + i.val + (i.unit ? '<span class="unit">' + i.unit + '</span>' : '') + '</div><div class="sub">' + i.sub + '</div></div>';
+  }).join('');
 
   const chipsEl = document.getElementById('dmChipsConferente');
   const allChips = ['', ...conferentes];
-  chipsEl.innerHTML = allChips.map(c =>
-    `<span class="dm-chip ${dashMercConferenteFiltro === c ? 'active' : ''}" data-c="${escapeAttr(c)}">${c ? escapeHtml(c) : 'Todos'}</span>`
-  ).join('');
-  chipsEl.querySelectorAll('.dm-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
+  chipsEl.innerHTML = allChips.map(function (c) {
+    return '<span class="dm-chip ' + (dashMercConferenteFiltro === c ? 'active' : '') + '" data-c="' + escapeAttr(c) + '">' + (c ? escapeHtml(c) : 'Todos') + '</span>';
+  }).join('');
+  chipsEl.querySelectorAll('.dm-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
       dashMercConferenteFiltro = chip.dataset.c;
       renderizarDashboardMerc();
     });
   });
 
-  const maxVol = Math.max(...ranking.map(r => r.volume), 1);
-  document.getElementById('dmRankList').innerHTML = ranking.map((r, i) => {
+  const maxVol = Math.max.apply(null, ranking.map(function (r) { return r.volume; }).concat([1]));
+  document.getElementById('dmRankList').innerHTML = ranking.map(function (r, i) {
     const color = DM_PALETTE[i % DM_PALETTE.length];
     const pct = Math.max((r.volume / maxVol) * 100, 3);
     const dim = dashMercConferenteFiltro && dashMercConferenteFiltro !== r.conferente ? 'opacity:.35;' : '';
-    const tipoDetail = Object.entries(r.porTipo)
-      .map(([t, v]) => `<span style="font-size:10px;color:var(--dash-text-dimmer)">${v} ${t === 'Kilo' ? 'kg' : t === 'Caixas' ? 'cx' : 'un.'}</span>`)
-      .join(' · ');
-    return `
-    <div class="dm-rank-row" style="${dim}">
-      <div class="dm-rank-num">#${i + 1}</div>
-      <div class="dm-avatar" style="background:${color}">${escapeHtml(r.conferente.slice(0, 2))}</div>
-      <div class="dm-rank-body">
-        <div class="name">${escapeHtml(r.conferente)}</div>
-        <div class="dm-bar-track"><div class="dm-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-        ${tipoDetail ? `<div style="margin-top:4px;display:flex;gap:10px">${tipoDetail}</div>` : ''}
-      </div>
-      <div class="dm-rank-metrics">
-        <div><span class="m-val">${r.volume}</span><span class="m-lbl">VOLUME</span></div>
-        <div><span class="m-val">${r.notas}</span><span class="m-lbl">NOTAS</span></div>
-      </div>
-    </div>`;
+    const tipoDetail = Object.entries(r.porTipo).map(function (e) {
+      var t = e[0], v = e[1];
+      return '<span style="font-size:10px;color:var(--dash-text-dimmer)">' + v + ' ' + (t === 'Kilo' ? 'kg' : t === 'Caixas' ? 'cx' : 'un.') + '</span>';
+    }).join(' \u00b7 ');
+    return '<div class="dm-rank-row" style="' + dim + '"><div class="dm-rank-num">#' + (i + 1) + '</div><div class="dm-avatar" style="background:' + color + '">' + escapeHtml(r.conferente.slice(0, 2)) + '</div><div class="dm-rank-body"><div class="name">' + escapeHtml(r.conferente) + '</div><div class="dm-bar-track"><div class="dm-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' + (tipoDetail ? '<div style="margin-top:4px;display:flex;gap:10px">' + tipoDetail + '</div>' : '') + '</div><div class="dm-rank-metrics"><div><span class="m-val">' + r.volume + '</span><span class="m-lbl">VOLUME</span></div><div><span class="m-val">' + r.notas + '</span><span class="m-lbl">NOTAS</span></div></div></div>';
   }).join('');
 
-  const totalTurno = porTurno.reduce((s, t) => s + t.volume, 0) || 1;
-  document.getElementById('dmTurnoHint').textContent = `${porTurno.length} turno${porTurno.length !== 1 ? 's' : ''} ativo${porTurno.length !== 1 ? 's' : ''}`;
-  document.getElementById('dmTurnoTrack').innerHTML = porTurno.map((t, i) => {
+  const totalTurno = porTurno.reduce(function (s, t) { return s + t.volume; }, 0) || 1;
+  document.getElementById('dmTurnoHint').textContent = porTurno.length + ' turno' + (porTurno.length !== 1 ? 's' : '') + ' ativo' + (porTurno.length !== 1 ? 's' : '');
+  document.getElementById('dmTurnoTrack').innerHTML = porTurno.map(function (t, i) {
     const pct = (t.volume / totalTurno) * 100;
-    return `<div class="dm-turno-seg" style="width:${pct}%;background:${DM_PALETTE[i % DM_PALETTE.length]}">${pct > 12 ? Math.round(pct) + '%' : ''}</div>`;
+    return '<div class="dm-turno-seg" style="width:' + pct + '%;background:' + DM_PALETTE[i % DM_PALETTE.length] + '">' + (pct > 12 ? Math.round(pct) + '%' : '') + '</div>';
   }).join('');
-  document.getElementById('dmTurnoLegend').innerHTML = porTurno.map((t, i) => {
-    const tipoDetail = Object.entries(t.porTipo)
-      .map(([tipo, vol]) => `${vol} ${tipo === 'Kilo' ? 'kg' : tipo === 'Caixas' ? 'cx' : 'un.'}`)
-      .join(' · ');
-    return `
-    <div class="row">
-      <span><span class="dm-sw" style="background:${DM_PALETTE[i % DM_PALETTE.length]}"></span>${t.turno}</span>
-      <b>${t.volume}${tipoDetail ? `<span style="font-weight:400;color:var(--dash-text-dimmer);font-size:11px"> (${tipoDetail})</span>` : ''}</b>
-    </div>`;
+  document.getElementById('dmTurnoLegend').innerHTML = porTurno.map(function (t, i) {
+    const tipoDetail = Object.entries(t.porTipo).map(function (e) {
+      var tipo = e[0], vol = e[1];
+      return vol + ' ' + (tipo === 'Kilo' ? 'kg' : tipo === 'Caixas' ? 'cx' : 'un.');
+    }).join(' \u00b7 ');
+    return '<div class="row"><span><span class="dm-sw" style="background:' + DM_PALETTE[i % DM_PALETTE.length] + '"></span>' + t.turno + '</span><b>' + t.volume + (tipoDetail ? '<span style="font-weight:400;color:var(--dash-text-dimmer);font-size:11px"> (' + tipoDetail + ')</span>' : '') + '</b></div>';
   }).join('');
 
-  const maxLoja = Math.max(...porLoja.map(l => l.volume), 1);
-  document.getElementById('dmLojaHint').textContent = `${porLoja.length} loja${porLoja.length !== 1 ? 's' : ''}`;
-  document.getElementById('dmLojaList').innerHTML = porLoja.map(l => {
+  const maxLoja = Math.max.apply(null, porLoja.map(function (l) { return l.volume; }).concat([1]));
+  document.getElementById('dmLojaHint').textContent = porLoja.length + ' loja' + (porLoja.length !== 1 ? 's' : '');
+  document.getElementById('dmLojaList').innerHTML = porLoja.map(function (l) {
     const pct = Math.max((l.volume / maxLoja) * 100, 3);
-    return `
-    <div class="dm-loja-row">
-      <div class="dm-loja-top">
-        <span class="name">${escapeHtml(l.loja)}</span>
-        <span class="vol">${l.volume}</span>
-      </div>
-      <div class="dm-loja-top" style="margin-top:-4px;">
-        <span class="who">${escapeHtml(l.responsaveis.join(', '))}</span>
-        <span class="who">${Object.entries(l.porTipo).map(([t, v]) => `${v} ${t === 'Kilo' ? 'kg' : t === 'Caixas' ? 'cx' : 'un.'}`).join(' · ')}</span>
-      </div>
-      <div class="dm-loja-bar"><div class="dm-loja-bar-fill" style="width:${pct}%"></div></div>
-    </div>`;
+    return '<div class="dm-loja-row"><div class="dm-loja-top"><span class="name">' + escapeHtml(l.loja) + '</span><span class="vol">' + l.volume + '</span></div><div class="dm-loja-top" style="margin-top:-4px;"><span class="who">' + escapeHtml(l.responsaveis.join(', ')) + '</span><span class="who">' + Object.entries(l.porTipo).map(function (e) { var t = e[0], v = e[1]; return v + ' ' + (t === 'Kilo' ? 'kg' : t === 'Caixas' ? 'cx' : 'un.'); }).join(' \u00b7 ') + '</span></div><div class="dm-loja-bar"><div class="dm-loja-bar-fill" style="width:' + pct + '%"></div></div></div>';
   }).join('');
 }
 
