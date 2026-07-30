@@ -288,22 +288,23 @@ function criarCelInput(type, value, label, idx, field) {
           return;
         }
         var naturalId = cdAtual + '_' + chamadoNum;
-        if (dadosMes[mesAtual][idx].id !== naturalId) {
-          var oldId = dadosMes[mesAtual][idx].id;
+        var oldId = dadosMes[mesAtual][idx].id;
+        if (oldId !== naturalId) {
+          var rowIdx = dadosMes[mesAtual].findIndex(function (d) { return d.id === oldId; });
+          if (rowIdx !== -1) {
+            dadosMes[mesAtual][rowIdx].id = naturalId;
+          }
           var criado = await fbDocCreate('chamados', naturalId, {
             id: naturalId, chamado: chamadoNum, loja: '', braco: '', turno: '',
             setor: '', plu: '', divergencia: '', observacao: '', obsTexto: '',
             conferente: '', usuario: usuarioLogado || '', dataAbertura: '', dataFechamento: ''
           }, { cd: cdAtual, ano: anoAtual, mes: MESES.indexOf(mesAtual), mesNome: mesAtual });
           if (!criado) {
+            if (rowIdx !== -1) dadosMes[mesAtual][rowIdx].id = oldId;
             inp.value = dadosMes[mesAtual][idx].chamado || '';
             return;
           }
           fbExcluirChamado(oldId);
-          var rowIdx = dadosMes[mesAtual].findIndex(function (d) { return d.id === oldId; });
-          if (rowIdx !== -1) {
-            dadosMes[mesAtual][rowIdx].id = naturalId;
-          }
         }
       }
       salvar(true);

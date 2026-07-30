@@ -119,7 +119,19 @@ async function fbCarregarChamados() {
     ], function (resultados) {
       var fbDadosMes = fbMontarDadosMes(resultados);
       for (var mes in fbDadosMes) {
-        dadosMes[mes] = fbDadosMes[mes];
+        if (!dadosMes[mes]) {
+          dadosMes[mes] = fbDadosMes[mes];
+        } else {
+          var porId = {};
+          dadosMes[mes].forEach(function (d) { if (d.id) porId[d.id] = d; });
+          fbDadosMes[mes].forEach(function (fb) {
+            if (fb.id && porId[fb.id]) {
+              for (var k in fb) porId[fb.id][k] = fb[k];
+            } else {
+              dadosMes[mes].push(fb);
+            }
+          });
+        }
       }
 
       if (_chamadosInicialResolve) {
