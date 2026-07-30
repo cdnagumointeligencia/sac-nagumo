@@ -1,4 +1,5 @@
 // ==================== UTILITÁRIOS ====================
+var usuarioLogado = null;
 function capitalizarPalavras(str) {
   if (!str) return str;
   return String(str).replace(/(^\s*\w|\s+\w)/g, m => m.toUpperCase());
