@@ -1253,6 +1253,66 @@ function normalizarRegistros(registros) {
   return [];
 }
 
+// ==================== LOGIN ====================
+function popularDropdownUsuarios() {
+  var sel = document.getElementById('loginUser');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Selecione —</option>';
+  todosUsuariosLogin.forEach(function (u) {
+    if (!u.ativo) return;
+    var opt = document.createElement('option');
+    opt.value = u.nome;
+    opt.textContent = u.nome;
+    sel.appendChild(opt);
+  });
+}
+
+async function fazerLogin(cd) {
+  var sel = document.getElementById('loginUser');
+  var senhaInput = document.getElementById('loginPassword');
+  var erroEl = document.getElementById('loginErro');
+  if (!sel || !senhaInput || !erroEl) return;
+
+  var nome = sel.value;
+  var senha = senhaInput.value.trim();
+  if (!nome || !senha) {
+    erroEl.style.display = 'block';
+    erroEl.textContent = 'Selecione um usuário e digite a senha!';
+    senhaInput.focus();
+    return;
+  }
+
+  var usuario = null;
+  for (var i = 0; i < todosUsuariosLogin.length; i++) {
+    if (todosUsuariosLogin[i].nome === nome && todosUsuariosLogin[i].ativo) {
+      usuario = todosUsuariosLogin[i];
+      break;
+    }
+  }
+  if (!usuario) {
+    erroEl.style.display = 'block';
+    erroEl.textContent = 'Usuário não encontrado!';
+    sel.focus();
+    return;
+  }
+
+  var senhaHash = await hashSenha(senha);
+  if (senhaHash !== usuario.senhaHash) {
+    erroEl.style.display = 'block';
+    erroEl.textContent = 'Senha incorreta!';
+    senhaInput.value = '';
+    senhaInput.focus();
+    return;
+  }
+
+  erroEl.style.display = 'none';
+  try { sessionStorage.setItem('sac_usuario_logado', nome); } catch (e) {}
+  try { sessionStorage.setItem('sac_cd_atual', cd); } catch (e) {}
+
+  var url = cd === 'CD1' ? 'SAC1.html' : 'SAC2.html';
+  window.location.href = url;
+}
+
 // ==================== FIREBASE AUTO-INIT ====================
 (async function () {
   await fbInit();
@@ -1272,4 +1332,6 @@ function normalizarRegistros(registros) {
     await carregarObservacoesLogin();
     await carregarDivergenciasLogin();
   }
+
+  popularDropdownUsuarios();
 })();

@@ -1149,7 +1149,7 @@ function atualizarBarraUsuario() {
 }
 
 async function iniciarSistema() {
-  usuarioLogado = 'CD1';
+  try { usuarioLogado = sessionStorage.getItem('sac_usuario_logado') || 'CD1'; } catch (e) { usuarioLogado = 'CD1'; }
   document.body.classList.add('cd1-active');
   await carregarTudo();
   await carregarSenhasSac();

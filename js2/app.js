@@ -41,6 +41,7 @@ document.addEventListener('input', function(e) {
 
 (async function() {
   try {
+    try { usuarioLogado = sessionStorage.getItem('sac_usuario_logado') || 'CD2'; } catch (e) { usuarioLogado = 'CD2'; }
     await fbInit();
     await carregarTudo();
     await carregarSenhasSac();
