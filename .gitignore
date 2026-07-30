@@ -1,0 +1,16 @@
+# Firebase config (if .env or similar is added later)
+.env
+.env.local
+firebase-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
