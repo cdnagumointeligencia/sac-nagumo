@@ -125,6 +125,7 @@
   color-scheme: light;
 }
 .login-field select option { background: #FFFFFF; color: #000000; color-scheme: light; }
+.login-field select:invalid { color: transparent; }
 .login-field select:focus,
 .login-field input:focus {
   border-bottom-color: #3CCBDB;
