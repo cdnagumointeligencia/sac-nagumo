@@ -1,0 +1,234 @@
+.login-config-btn {
+  position: fixed; top: 16px; right: 16px; z-index: 10001;
+  width: 42px; height: 42px; border: none; border-radius: 10px;
+  background: rgba(255,255,255,0.75); backdrop-filter: blur(8px); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; color: #6b7280;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.2s ease;
+}
+.login-config-btn:hover { background: #fff; color: #374151; transform: rotate(45deg); box-shadow: 0 4px 14px rgba(0,0,0,0.14); }
+
+.login-screen {
+  display: none; position: fixed; inset: 0; width: 100%; height: 100%;
+  background: #F7F7F7;
+  z-index: 10000; justify-content: center; align-items: center;
+  overflow: hidden;
+  color-scheme: light;
+}
+.login-screen.show { display: flex; }
+
+.login-blob-wrap {
+  position: absolute; inset: 0; pointer-events: none;
+  transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+}
+.login-blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(70px); mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.login-blob-1 {
+  width: 620px; height: 620px; top: -180px; left: -160px;
+  background: radial-gradient(circle at 30% 30%, #3CCBDB, transparent 70%);
+  opacity: 0.18;
+  animation: blobMorph1 16s ease-in-out infinite;
+}
+.login-blob-2 {
+  width: 560px; height: 560px; bottom: -200px; right: -140px;
+  background: radial-gradient(circle at 60% 40%, #CD0136, transparent 70%);
+  opacity: 0.12;
+  animation: blobMorph2 20s ease-in-out infinite;
+}
+.login-blob-3 {
+  width: 420px; height: 420px; top: 40%; left: 55%;
+  background: radial-gradient(circle at 50% 50%, #003364, transparent 70%);
+  opacity: 0.14;
+  animation: blobMorph3 13s ease-in-out infinite;
+}
+@keyframes blobMorph1 {
+  0%, 100% { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; transform: translate(0,0) scale(1); }
+  33% { border-radius: 60% 40% 30% 70% / 55% 65% 35% 45%; transform: translate(40px,30px) scale(1.08); }
+  66% { border-radius: 30% 70% 50% 50% / 35% 45% 55% 65%; transform: translate(-20px,50px) scale(0.95); }
+}
+@keyframes blobMorph2 {
+  0%, 100% { border-radius: 55% 45% 35% 65% / 40% 55% 45% 60%; transform: translate(0,0) scale(1); }
+  50% { border-radius: 35% 65% 60% 40% / 60% 35% 65% 40%; transform: translate(-50px,-30px) scale(1.12); }
+}
+@keyframes blobMorph3 {
+  0%, 100% { border-radius: 50%; transform: translate(0,0) scale(1); }
+  50% { border-radius: 40% 60% 55% 45% / 50% 45% 55% 50%; transform: translate(30px,-40px) scale(1.15); }
+}
+.login-grain {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0.03; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.login-card {
+  position: relative; z-index: 2;
+  background: #FFFFFF;
+  border-radius: 34px 12px 34px 12px;
+  padding: 44px 38px 34px; width: 410px; max-width: 92vw;
+  box-shadow: 0 30px 80px -24px rgba(1,33,67,0.25), 0 1px 0 rgba(1,33,67,0.04) inset;
+  animation: loginFadeIn 0.6s cubic-bezier(.2,.8,.2,1);
+}
+.login-card::before {
+  content: ""; position: absolute; inset: -1px; z-index: -1;
+  border-radius: inherit; padding: 1px;
+  background: conic-gradient(from var(--login-angle,0deg), #3CCBDB, #CD0136, #003364, #3CCBDB);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: loginBorderSpin 6s linear infinite;
+  opacity: 0.9;
+}
+@property --login-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes loginBorderSpin { to { --login-angle: 360deg; } }
+@keyframes loginFadeIn { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.login-brand {
+  text-align: center; margin-bottom: 30px;
+}
+.login-brand h1 {
+  font-size: 1.9rem; font-weight: 700; letter-spacing: -0.5px;
+  margin: 0 0 6px; line-height: 1.1;
+  background: linear-gradient(100deg, #003364 20%, #3CCBDB 55%, #003364 80%);
+  background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
+  color: transparent; animation: loginShine 5s linear infinite;
+}
+@keyframes loginShine { to { background-position: -220% center; } }
+.login-brand p {
+  font-size: 0.72rem; color: #4B5A72; margin: 0;
+  text-transform: uppercase; letter-spacing: 2px; font-family: 'JetBrains Mono', monospace;
+}
+
+.login-field {
+  position: relative; margin-bottom: 22px;
+}
+.login-field label {
+  position: absolute; top: 50%; left: 2px;
+  transform: translateY(-50%);
+  font-size: 0.88rem; color: rgba(1,33,67,0.45);
+  pointer-events: none; transition: all 0.2s cubic-bezier(.2,.8,.2,1);
+  background: transparent;
+}
+.login-field select,
+.login-field input {
+  width: 100%; padding: 12px 4px 8px;
+  border: none; border-bottom: 2px solid rgba(1,33,67,0.16);
+  border-radius: 0; font-size: 0.98rem; background: transparent;
+  color: #000000; transition: all 0.25s ease;
+  outline: none; appearance: none; -webkit-appearance: none;
+}
+.login-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2301C7C4' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  padding-right: 24px;
+  color-scheme: light;
+}
+.login-field select option { background: #FFFFFF; color: #000000; color-scheme: light; }
+.login-field select:focus,
+.login-field input:focus {
+  border-bottom-color: #3CCBDB;
+  box-shadow: 0 1px 0 0 #3CCBDB;
+}
+.login-field.focus label,
+.login-field.has-value label {
+  top: -10px; transform: none;
+  font-size: 0.64rem; color: #003364; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+
+.login-remember {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 24px; font-size: 0.8rem; color: #4B5A72;
+  cursor: pointer;
+}
+.login-remember input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: #3CCBDB; cursor: pointer;
+}
+
+.login-cd-select { margin-bottom: 22px; }
+.login-cd-label {
+  display: block; font-size: 0.64rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: rgba(1,33,67,0.45); margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.login-cd-options { display: flex; gap: 10px; }
+.login-cd-card {
+  flex: 1; padding: 14px 0; border: 2px solid rgba(1,33,67,0.12);
+  border-radius: 10px 4px 10px 4px; background: #FAFBFC;
+  cursor: pointer; transition: all 0.2s ease; text-align: center;
+}
+.login-cd-card:hover { border-color: #3CCBDB; background: #F0FDFC; }
+.login-cd-card[data-cd="CD2"]:hover { border-color: #16a34a; background: #F0FDF4; }
+.login-cd-card.selected {
+  border-color: #3CCBDB; background: linear-gradient(135deg, #F0FDFC 0%, #E6FAF9 100%);
+  box-shadow: 0 0 0 3px rgba(1,199,196,0.15);
+}
+.login-cd-card[data-cd="CD2"].selected {
+  border-color: #16a34a; background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  box-shadow: 0 0 0 3px rgba(22,163,74,0.15);
+}
+.login-cd-num {
+  font-size: 0.92rem; font-weight: 700; color: #003364;
+  letter-spacing: 1px;
+}
+.login-cd-card.selected .login-cd-num { color: #3CCBDB; }
+.login-cd-card[data-cd="CD2"].selected .login-cd-num { color: #16a34a; }
+
+.login-btn {
+  width: 100%; padding: 14px; border: none; border-radius: 12px 4px 12px 4px;
+  background: linear-gradient(115deg, #3CCBDB 0%, #003364 55%, #CD0136 100%);
+  background-size: 220% auto; background-position: 0% center;
+  color: #FFFFFF; font-size: 0.92rem; font-weight: 800;
+  cursor: pointer; letter-spacing: 1px; text-transform: uppercase;
+  box-shadow: 0 10px 30px -8px rgba(1,199,196,0.4);
+  transition: background-position 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.login-btn:hover {
+  background-position: 100% center;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px -8px rgba(1,199,196,0.5);
+}
+.login-btn:active { transform: translateY(0px); }
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.login-error {
+  display: none; text-align: center;
+  color: #CD0136; font-size: 0.82rem; font-weight: 600;
+  margin-bottom: 14px; padding: 8px;
+  background: rgba(205,1,54,0.08); border-radius: 8px;
+  border: 1px solid rgba(205,1,54,0.30);
+}
+.login-error.show { display: block; animation: loginFadeIn 0.3s ease; }
+
+.login-footer {
+  text-align: center; margin-top: 26px;
+  font-size: 0.66rem; color: rgba(1,33,67,0.38); letter-spacing: 1.5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-blob, .login-brand h1, .login-btn, .login-card::before { animation: none !important; }
+}
+
+.login-screen:has(select:focus) .login-card::before,
+.login-screen:has(select:focus) .login-blob,
+.login-screen:has(select:focus) .login-brand h1 {
+  animation-play-state: paused;
+}
+
+.btn-config {
+  background: linear-gradient(135deg, #374151, #1f2937) !important;
+  font-size: 1.1rem !important;
+  padding: 8px 14px !important;
+  letter-spacing: 0;
+}
+.btn-config:hover { background: linear-gradient(135deg, #4b5563, #374151) !important; }
+
+@media (max-width: 480px) {
+  .login-card { padding: 30px 22px 24px; border-radius: 26px 10px 26px 10px; }
+  .login-brand h1 { font-size: 1.4rem; }
+  .login-blob-1, .login-blob-2, .login-blob-3 { filter: blur(40px); }
+}
+
+.modal { z-index: 10001; }
