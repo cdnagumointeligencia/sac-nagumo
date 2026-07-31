@@ -90,7 +90,15 @@ function navegarCD(cd) {
 
 // ==================== ABRIR MODAIS ESPECÍFICOS ====================
 function abrirModalConfig() { abrirModal('modalConfig'); }
-function abrirModalUsuarios() { abrirModal('modalUsuarios'); }
+function abrirModalUsuarios() {
+  document.getElementById('senhaArea').style.display = 'block';
+  document.getElementById('gestaoArea').style.display = 'none';
+  document.getElementById('tituloModalUser').textContent = 'Acesso Restrito';
+  document.getElementById('inputSenha').value = '';
+  document.getElementById('senhaErro').style.display = 'none';
+  abrirModal('modalUsuarios');
+  setTimeout(function () { var inp = document.getElementById('inputSenha'); if (inp) inp.focus(); }, 100);
+}
 function abrirModalBackup() { abrirModal('modalBackup'); }
 function abrirModalLojas() { abrirModal('modalLojas'); }
 function abrirModalBracos() { abrirModal('modalBracos'); }
@@ -289,7 +297,7 @@ function validarSenha() {
   });
 }
 
-async function adicionarUsuarioLogin() {
+async function adicionarUsuario() {
   var nome = document.getElementById('novoUsuario').value.trim();
   var senha = document.getElementById('novaSenhaUsuario').value.trim() || SENHA_PADRAO;
   if (!nome) { toast('Digite o nome do usuário', 'error'); return; }
