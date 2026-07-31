@@ -266,8 +266,8 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
   if (extraConditions) conditions = conditions.concat(extraConditions);
 
   return fbOnSnapshot(colecao, conditions, function (resultados) {
-    var qtdAntes = alvo.length;
-    alvo.length = 0;
+    var excluidos = idsColecaoExcluidos();
+    var porId = {};
     resultados.forEach(function (r) {
       var item = {};
       for (var k in r) {
@@ -277,10 +277,35 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
           item[k] = r[k];
         }
       }
-      if (!item.id && !item.firestoreId) item.id = r.firestoreId;
-      alvo.push(item);
+      var id = item.id || r.firestoreId;
+      if (!id || excluidos.indexOf(id) !== -1) return;
+      if (!item.id) item.id = id;
+      porId[id] = item;
     });
-    if (resultados.length > 0) {
+
+    var mudou = false;
+    for (var i = 0; i < alvo.length; i++) {
+      var d = alvo[i];
+      if (!d) continue;
+      var dId = d.id || d.firestoreId;
+      if (dId && porId[dId]) {
+        var atualizado = porId[dId];
+        delete porId[dId];
+        for (var c in atualizado) {
+          if (c === 'id') continue;
+          if (d[c] !== atualizado[c]) {
+            d[c] = atualizado[c];
+            mudou = true;
+          }
+        }
+      }
+    }
+    for (var idRestante in porId) {
+      alvo.push(porId[idRestante]);
+      mudou = true;
+    }
+
+    if (mudou || resultados.length > 0) {
       var pageMap = { senhasSac: 'senhaSac', notasDevolucao: 'notasDevolucao', mercadoriasNF: 'mercadoriasNF' };
       var pagina = pageMap[colecao];
       if (pagina && paginaAtual === pagina) {
@@ -289,7 +314,7 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
         else if (pagina === 'mercadoriasNF') agendarRenderSePossivel(renderizarMercadoriasNF);
       }
     }
-    return qtdAntes !== alvo.length;
+    return mudou;
   });
 }
 
@@ -303,8 +328,11 @@ async function fbCarregarColecao(colecao, alvo) {
   ]);
   if (!resultados || resultados.length === 0) return false;
 
+  var excluidos = idsColecaoExcluidos();
   alvo.length = 0;
   resultados.forEach(function (r) {
+    var id = r.id || r.firestoreId;
+    if (id && excluidos.indexOf(id) !== -1) return;
     var item = {};
     for (var k in r) {
       if (k !== 'firestoreId' && k !== 'cd' && k !== 'ano' && k !== 'mes' &&
@@ -321,11 +349,48 @@ async function fbCarregarColecao(colecao, alvo) {
 
 async function fbSalvarColecao(colecao, alvo, extra) {
   if (!fbDisponivel() || !cdAtual) return;
-  for (var i = 0; i < alvo.length; i++) {
-    var item = alvo[i];
+  var lista = (alvo || []).slice();
+  for (var i = 0; i < lista.length; i++) {
+    var item = lista[i];
+    if (!item) continue;
     var docId = item.id || item.firestoreId || gerarId();
     if (!item.id) item.id = docId;
     await fbDocSet(colecao, docId, item, { cd: cdAtual, ano: new Date().getFullYear(), mesNome: mesAtual });
+  }
+}
+
+async function fbSalvarItemColecao(colecao, item) {
+  if (!fbDisponivel() || !cdAtual || !item) return;
+  var docId = item.id || item.firestoreId || gerarId();
+  if (!item.id) item.id = docId;
+  await fbDocSet(colecao, docId, item, { cd: cdAtual, ano: new Date().getFullYear(), mesNome: mesAtual });
+}
+
+// ==================== EXCLUSÃO DE ITENS DE COLEÇÕES ====================
+var _idsColecaoExcluidos = null;
+function idsColecaoExcluidos() {
+  if (!_idsColecaoExcluidos) {
+    var salvos = lsGet('colecoesExcluidos');
+    _idsColecaoExcluidos = Array.isArray(salvos) ? salvos : [];
+  }
+  return _idsColecaoExcluidos;
+}
+function marcarItemColecaoExcluido(id) {
+  if (!id) return;
+  var lista = idsColecaoExcluidos();
+  if (lista.indexOf(id) === -1) {
+    lista.push(id);
+    if (lista.length > 1000) lista.splice(0, lista.length - 1000);
+    lsSet('colecoesExcluidos', lista);
+  }
+}
+function desmarcarItemColecaoExcluido(id) {
+  if (!id) return;
+  var lista = idsColecaoExcluidos();
+  var i = lista.indexOf(id);
+  if (i !== -1) {
+    lista.splice(i, 1);
+    lsSet('colecoesExcluidos', lista);
   }
 }
 

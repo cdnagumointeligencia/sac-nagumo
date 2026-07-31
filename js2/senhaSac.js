@@ -2,11 +2,12 @@
 let dadosSenhasSac = [];
 
 var _fbTimerSenhas = null;
+var _pendentesSenhaItem = {};
 
 async function carregarSenhasSac() {
   var fbOk = await fbCarregarColecao('senhasSac', dadosSenhasSac);
   if (!fbOk) {
-    dadosSenhasSac = (lsGetCd('SENHAS_SAC_dados') || []).sort(function (a, b) { return (a.senha || 0) - (b.senha || 0); });
+    dadosSenhasSac = (lsGetCd('SENHAS_SAC_dados') || []).slice();
   }
   garantirIds(dadosSenhasSac);
   if (fbDisponivel() && cdAtual) {
@@ -15,10 +16,27 @@ async function carregarSenhasSac() {
   }
 }
 
-async function salvarSenhasSac() {
+function flushSenhaSacItens() {
+  var pendentes = _pendentesSenhaItem;
+  _pendentesSenhaItem = {};
+  for (var id in pendentes) {
+    fbSalvarItemColecao('senhasSac', pendentes[id]);
+  }
+}
+
+function salvarSenhaSacItem(item) {
+  if (!item) return;
   lsSetCd('SENHAS_SAC_dados', dadosSenhasSac);
+  if (!item.id) item.id = gerarId();
+  if (!fbDisponivel() || !cdAtual) return;
+  _pendentesSenhaItem[item.id] = item;
   clearTimeout(_fbTimerSenhas);
-  _fbTimerSenhas = setTimeout(function () { fbSalvarColecao('senhasSac', dadosSenhasSac); }, 500);
+  _fbTimerSenhas = setTimeout(flushSenhaSacItens, 300);
+}
+
+function salvarSenhasSac() {
+  lsSetCd('SENHAS_SAC_dados', dadosSenhasSac);
+  flushSenhaSacItens();
 }
 
 function renderizarSenhasSac() {
@@ -41,6 +59,9 @@ function renderizarSenhasSac() {
       }
       return true;
     });
+  filtrados.sort(function (a, b) {
+    return (Number(b.d.criado) || 0) - (Number(a.d.criado) || 0);
+  });
   if (filtrados.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
@@ -61,7 +82,7 @@ function renderizarSenhasSac() {
     tr.appendChild(criarCelInputSenhaSac('text', d.chamado, i, 'chamado'));
     tr.appendChild(criarCelSelectLoja(d.loja || '', (val) => {
       dadosSenhasSac[i].loja = val;
-      salvarSenhasSac();
+      salvarSenhaSacItem(dadosSenhasSac[i]);
     }));
     tr.appendChild(criarCelInputSenhaSac('number', d.senha, i, 'senha'));
     tr.appendChild(criarCelSelectSenhaSac(DIVERGENCIAS_SAC, d.divergencia, i, 'divergencia'));
@@ -78,9 +99,14 @@ function renderizarSenhasSac() {
     btnDel.onclick = function () {
       if (!confirm('Excluir esta senha?')) return;
       var item = dadosSenhasSac[i];
+      var itemId = item && (item.id || item.firestoreId);
+      if (itemId) {
+        marcarItemColecaoExcluido(itemId);
+        delete _pendentesSenhaItem[itemId];
+      }
       fbExcluirItemColecao('senhasSac', item);
       dadosSenhasSac.splice(i, 1);
-      salvarSenhasSac();
+      lsSetCd('SENHAS_SAC_dados', dadosSenhasSac);
       renderizarSenhasSac();
       toast('Senha exclu\u00edda', 'success');
     };
@@ -108,7 +134,7 @@ function criarCelInputSenhaSac(type, value, idx, field) {
     }
     dadosSenhasSac[idx][field] = inp.value;
     td.title = inp.value;
-    salvarSenhasSac();
+    salvarSenhaSacItem(dadosSenhasSac[idx]);
   });
   td.appendChild(inp);
   return td;
@@ -128,7 +154,7 @@ function criarCelSelectSenhaSac(options, value, idx, field) {
   sel.addEventListener('change', () => {
     dadosSenhasSac[idx][field] = sel.value;
     td.title = sel.value;
-    salvarSenhasSac();
+    salvarSenhaSacItem(dadosSenhasSac[idx]);
   });
   td.appendChild(sel);
   return td;
@@ -152,7 +178,7 @@ function criarCelResponsavel(value, idx) {
   sel.addEventListener('change', () => {
     dadosSenhasSac[idx].responsavel = sel.value;
     td.title = sel.value;
-    salvarSenhasSac();
+    salvarSenhaSacItem(dadosSenhasSac[idx]);
   });
   td.appendChild(sel);
   return td;
@@ -202,12 +228,14 @@ async function adicionarSenhaSac() {
     const maxGlobal = await fbMaxSenhaSacGlobal();
     proxima = Math.max(localMax, maxGlobal) + 1;
   }
-  dadosSenhasSac.unshift({
+  const novaLinha = {
     chamado: '', loja: '', senha: String(proxima),
-    divergencia: '', status: '', responsavel: usuarioLogado || '', observacao: '', data: hoje
-  });
+    divergencia: '', status: '', responsavel: usuarioLogado || '', observacao: '', data: hoje,
+    criado: Date.now()
+  };
+  dadosSenhasSac.unshift(novaLinha);
   garantirIds(dadosSenhasSac);
-  salvarSenhasSac();
+  salvarSenhaSacItem(novaLinha);
   renderizarSenhasSac();
   toast('Senha adicionada', 'success');
 }
