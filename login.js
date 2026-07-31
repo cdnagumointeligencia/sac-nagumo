@@ -39,6 +39,7 @@ const LOJAS_MERCADORIAS_DEFAULT = [
 ];
 
 // ==================== DADOS GLOBAIS ====================
+var usuarioLogado = null;
 var todosUsuariosLogin = [];
 var lojasMercadoriasLogin = [];
 var bracosConfigLogin = {};
@@ -184,6 +185,25 @@ async function carregarUsuariosLogin() {
       }
     }
   } catch (e) {}
+
+  if (fbOk) {
+    var nomesFb = {};
+    todosUsuariosLogin.forEach(function (u) { nomesFb[u.nome] = true; });
+    var salvosMerge = lsGetShared('SAC_USUARIOS') || [];
+    var pendentes = [];
+    for (var u of salvosMerge) {
+      if (!u.nome || nomesFb[u.nome]) continue;
+      if (!u.senhaHash) {
+        u.senhaHash = await hashSenha(u.senha || SENHA_PADRAO);
+        delete u.senha;
+      }
+      pendentes.push(u);
+    }
+    if (pendentes.length > 0) {
+      todosUsuariosLogin = todosUsuariosLogin.concat(pendentes);
+      todosUsuariosLogin.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
+    }
+  }
 
   if (!fbOk) {
     var salvos = lsGetShared('SAC_USUARIOS') || [];

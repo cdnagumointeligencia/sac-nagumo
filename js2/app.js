@@ -50,7 +50,10 @@ document.addEventListener('input', function(e) {
         try { sessionStorage.setItem('sac_cd_atual', sessao.cd); } catch (e) {}
       }
     }
-    if (!usuarioLogado) usuarioLogado = 'CD2';
+    if (!usuarioLogado) {
+      window.location.href = 'index.html';
+      return;
+    }
     await fbInit();
     await carregarTudo();
     await carregarSenhasSac();

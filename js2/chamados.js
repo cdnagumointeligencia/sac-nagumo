@@ -224,6 +224,13 @@ function criarLinha(d, idx) {
     if (nome === d.usuario) opt.selected = true;
     selUser.appendChild(opt);
   });
+  if (d.usuario && !usuarios.includes(d.usuario)) {
+    const optExtra = document.createElement('option');
+    optExtra.value = d.usuario;
+    optExtra.textContent = d.usuario;
+    optExtra.selected = true;
+    selUser.appendChild(optExtra);
+  }
   selUser.onchange = () => {
     dadosMes[mesAtual][idx].usuario = selUser.value;
     tdUser.title = selUser.value;

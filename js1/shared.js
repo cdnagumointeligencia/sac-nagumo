@@ -1186,7 +1186,10 @@ async function iniciarSistema() {
       try { sessionStorage.setItem('sac_cd_atual', sessao.cd); } catch (e) {}
     }
   }
-  if (!usuarioLogado) usuarioLogado = 'CD1';
+  if (!usuarioLogado) {
+    window.location.href = 'index.html';
+    return;
+  }
   document.body.classList.add('cd1-active');
   await carregarTudo();
   await carregarSenhasSac();
