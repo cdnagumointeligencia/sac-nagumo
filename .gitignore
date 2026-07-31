@@ -21,5 +21,8 @@ desktop.ini
 # Conversas locais (nao vao para o GitHub)
 conversas/
 
+# Regras de negocio (local, nao vai para o GitHub)
+regras do negócio.md
+
 # Link do site online (local, nao vai para o GitHub)
 link.txt
