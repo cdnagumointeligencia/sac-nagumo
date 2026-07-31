@@ -306,6 +306,22 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
       mudou = true;
     }
 
+    var vistos = {};
+    for (var j = 0; j < alvo.length; j++) {
+      var dj = alvo[j];
+      if (!dj) continue;
+      var djId = dj.id || dj.firestoreId;
+      if (djId) {
+        if (vistos[djId]) {
+          alvo.splice(j, 1);
+          j--;
+          mudou = true;
+        } else {
+          vistos[djId] = true;
+        }
+      }
+    }
+
     if (mudou || resultados.length > 0) {
       var pageMap = { senhasSac: 'senhaSac', notasDevolucao: 'notasDevolucao', mercadoriasNF: 'mercadoriasNF' };
       var pagina = pageMap[colecao];

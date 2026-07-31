@@ -374,6 +374,11 @@ async function criarNotaDevAutomatica(chamado) {
     toast('Nota de devolu\u00e7\u00e3o j\u00e1 existe para este chamado', 'error');
     return;
   }
+  var jaExisteFb = await fbVerificarNotaDevDuplicada(chamado.chamado, chamado.loja);
+  if (jaExisteFb) {
+    toast('Nota de devolu\u00e7\u00e3o j\u00e1 existe no sistema (criada por outro usu\u00e1rio)', 'error');
+    return;
+  }
   const hoje = new Date().toISOString().split('T')[0];
   var novaNota = {
     chamado: chamado.chamado || '',
@@ -391,6 +396,9 @@ async function criarNotaDevAutomatica(chamado) {
     return;
   }
   novaNota.id = naturalId;
+  if (dadosNotasDev.some(function (n) { return n.id === naturalId; })) {
+    return;
+  }
   dadosNotasDev.push(novaNota);
   salvarNotasDev();
   toast('Nota de devolu\u00e7\u00e3o criada automaticamente!', 'success');
