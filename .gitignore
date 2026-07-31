@@ -17,3 +17,6 @@ desktop.ini
 
 # Playwright test artifacts
 .playwright-mcp/
+
+# Conversas locais (nao vao para o GitHub)
+conversas/
