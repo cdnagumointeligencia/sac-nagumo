@@ -320,6 +320,7 @@ async function adicionarUsuario() {
   document.getElementById('novoUsuario').value = '';
   document.getElementById('novaSenhaUsuario').value = SENHA_PADRAO;
   renderizarListaUsuarios();
+  popularDropdownUsuarios();
   toast(nome + ' adicionado', 'success');
 }
 
@@ -338,6 +339,7 @@ async function toggleUsuarioAtivo(nome) {
   var novaLista = todosUsuariosLogin.slice();
   lsSetShared('SAC_USUARIOS', novaLista);
   renderizarListaUsuarios();
+  popularDropdownUsuarios();
   toast(nome + ' ' + (u.ativo ? 'reativado' : 'desativado'), 'success');
 }
 
@@ -360,6 +362,7 @@ async function resetarSenhaUsuario(nome) {
     lsSetShared('SAC_USUARIOS', novaLista);
     input.value = '';
     renderizarListaUsuarios();
+    popularDropdownUsuarios();
     toast('Senha de ' + nome + ' alterada', 'success');
   }
 }
@@ -383,6 +386,7 @@ async function excluirUsuarioLogin(nome) {
   var novaLista = todosUsuariosLogin.slice();
   lsSetShared('SAC_USUARIOS', novaLista);
   renderizarListaUsuarios();
+  popularDropdownUsuarios();
   toast(nome + ' excluído', 'success');
 }
 

@@ -10,6 +10,24 @@
       ]
     },
     {
+      "collectionGroup": "chamados",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chamado", "order": "ASCENDING" },
+        { "fieldPath": "cd", "order": "ASCENDING" },
+        { "fieldPath": "ativo", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notasDevolucao",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chamado", "order": "ASCENDING" },
+        { "fieldPath": "loja", "order": "ASCENDING" },
+        { "fieldPath": "ativo", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "senhasSac",
       "queryScope": "COLLECTION",
       "fields": [
