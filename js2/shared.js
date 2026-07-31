@@ -225,6 +225,34 @@ function _ssRemove(chave) {
   try { sessionStorage.removeItem(chave); } catch { _sessaoMem = null; }
 }
 
+// ==================== SESSÃO PERSISTENTE ====================
+function verificarSessao() {
+  let raw = null;
+  try { raw = localStorage.getItem('SAC_sessao'); } catch (e) {}
+  if (!raw) return null;
+  try {
+    const sessao = JSON.parse(raw);
+    const agora = new Date();
+    const expira = new Date(sessao.expiraEm);
+    if (agora > expira) {
+      try { localStorage.removeItem('SAC_sessao'); } catch (e) {}
+      return null;
+    }
+    return { nome: sessao.nome, cd: sessao.cd || 'CD2' };
+  } catch {
+    try { localStorage.removeItem('SAC_sessao'); } catch (e) {}
+    return null;
+  }
+}
+
+function logout() {
+  try { sessionStorage.removeItem('sac_usuario_logado'); } catch (e) {}
+  try { sessionStorage.removeItem('sac_cd_atual'); } catch (e) {}
+  try { localStorage.removeItem('SAC_sessao'); } catch (e) {}
+  usuarioLogado = null;
+  window.location.href = 'index.html';
+}
+
 // ==================== ABAS MENSAIS ====================
 function montarAbas() {
   const container = document.getElementById('tabsMes');
@@ -1129,4 +1157,21 @@ function sairComBackup() {
 
 function abrirModalConfig() {
   abrirModal('modalConfig');
+}
+
+function atualizarBarraUsuario() {
+  if (usuarioLogado) {
+    document.querySelectorAll('.page-user-info').forEach(el => {
+      const nameEl = el.querySelector('span:first-child');
+      const cdEl = el.querySelector('span:last-child');
+      if (nameEl && cdEl) {
+        nameEl.textContent = usuarioLogado;
+        cdEl.textContent = cdAtual;
+      }
+    });
+    const chamadosName = document.getElementById('chamadosUserName');
+    const chamadosCd = document.getElementById('chamadosUserCd');
+    if (chamadosName) chamadosName.textContent = usuarioLogado;
+    if (chamadosCd) chamadosCd.textContent = cdAtual;
+  }
 }

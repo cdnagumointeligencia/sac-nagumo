@@ -41,7 +41,16 @@ document.addEventListener('input', function(e) {
 
 (async function() {
   try {
-    try { usuarioLogado = sessionStorage.getItem('sac_usuario_logado') || 'CD2'; } catch (e) { usuarioLogado = 'CD2'; }
+    try { usuarioLogado = sessionStorage.getItem('sac_usuario_logado'); } catch (e) { usuarioLogado = null; }
+    if (!usuarioLogado) {
+      const sessao = verificarSessao();
+      if (sessao) {
+        usuarioLogado = sessao.nome;
+        try { sessionStorage.setItem('sac_usuario_logado', usuarioLogado); } catch (e) {}
+        try { sessionStorage.setItem('sac_cd_atual', sessao.cd); } catch (e) {}
+      }
+    }
+    if (!usuarioLogado) usuarioLogado = 'CD2';
     await fbInit();
     await carregarTudo();
     await carregarSenhasSac();
@@ -62,6 +71,7 @@ document.addEventListener('input', function(e) {
     montarAbasGenerico('tabsMesDash', mesAtualDash, selecionarMesDash);
     definirDatasFiltro();
     if (paginaAtual !== 'chamados') mudarPagina('chamados');
+    atualizarBarraUsuario();
     document.getElementById('tituloPagina').textContent = 'Acompanhamento de Chamados CD2';
   } catch (err) {
     console.error('Erro ao iniciar:', err);

@@ -226,6 +226,34 @@ function _ssRemove(chave) {
   try { sessionStorage.removeItem(chave); } catch { _sessaoMem = null; }
 }
 
+// ==================== SESSÃO PERSISTENTE ====================
+function verificarSessao() {
+  let raw = null;
+  try { raw = localStorage.getItem('SAC_sessao'); } catch (e) {}
+  if (!raw) return null;
+  try {
+    const sessao = JSON.parse(raw);
+    const agora = new Date();
+    const expira = new Date(sessao.expiraEm);
+    if (agora > expira) {
+      try { localStorage.removeItem('SAC_sessao'); } catch (e) {}
+      return null;
+    }
+    return { nome: sessao.nome, cd: sessao.cd || 'CD1' };
+  } catch {
+    try { localStorage.removeItem('SAC_sessao'); } catch (e) {}
+    return null;
+  }
+}
+
+function logout() {
+  try { sessionStorage.removeItem('sac_usuario_logado'); } catch (e) {}
+  try { sessionStorage.removeItem('sac_cd_atual'); } catch (e) {}
+  try { localStorage.removeItem('SAC_sessao'); } catch (e) {}
+  usuarioLogado = null;
+  window.location.href = 'index.html';
+}
+
 // ==================== ABAS MENSIS ====================
 function montarAbas() {
   const container = document.getElementById('tabsMes');
@@ -1149,7 +1177,16 @@ function atualizarBarraUsuario() {
 }
 
 async function iniciarSistema() {
-  try { usuarioLogado = sessionStorage.getItem('sac_usuario_logado') || 'CD1'; } catch (e) { usuarioLogado = 'CD1'; }
+  try { usuarioLogado = sessionStorage.getItem('sac_usuario_logado'); } catch (e) { usuarioLogado = null; }
+  if (!usuarioLogado) {
+    const sessao = verificarSessao();
+    if (sessao) {
+      usuarioLogado = sessao.nome;
+      try { sessionStorage.setItem('sac_usuario_logado', usuarioLogado); } catch (e) {}
+      try { sessionStorage.setItem('sac_cd_atual', sessao.cd); } catch (e) {}
+    }
+  }
+  if (!usuarioLogado) usuarioLogado = 'CD1';
   document.body.classList.add('cd1-active');
   await carregarTudo();
   await carregarSenhasSac();

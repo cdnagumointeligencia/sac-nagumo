@@ -1330,6 +1330,14 @@ async function fazerLogin(cd) {
   erroEl.style.display = 'none';
   try { sessionStorage.setItem('sac_usuario_logado', nome); } catch (e) {}
   try { sessionStorage.setItem('sac_cd_atual', cd); } catch (e) {}
+  try {
+    localStorage.setItem('SAC_sessao', JSON.stringify({
+      nome: nome,
+      cd: cd,
+      timestamp: new Date().toISOString(),
+      expiraEm: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
+    }));
+  } catch (e) {}
 
   var url = cd === 'CD1' ? 'SAC1.html' : 'SAC2.html';
   window.location.href = url;
