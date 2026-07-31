@@ -37,6 +37,14 @@
       ]
     },
     {
+      "collectionGroup": "senhasSac",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ativo", "order": "ASCENDING" },
+        { "fieldPath": "ano", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "notasDevolucao",
       "queryScope": "COLLECTION",
       "fields": [
