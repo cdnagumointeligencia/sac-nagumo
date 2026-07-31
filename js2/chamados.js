@@ -255,7 +255,7 @@ function criarLinha(d, idx) {
   btnDel.onclick = function () {
     if (!confirm('Excluir este chamado?')) return;
     var item = dadosMes[mesAtual][idx];
-    if (_idNatural(item.id)) fbExcluirChamado(item.id);
+    if (item.id) fbExcluirChamado(item.id);
     dadosMes[mesAtual].splice(idx, 1);
     salvarDadosMes();
     renderizarTabela();
@@ -317,6 +317,7 @@ function criarCelInput(type, value, label, idx, field) {
             inp.value = dadosMes[mesAtual][idx].chamado || '';
             return;
           }
+          desmarcarChamadoExcluido(naturalId);
           if (_idNatural(oldId)) fbExcluirChamado(oldId);
         }
       }

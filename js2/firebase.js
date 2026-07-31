@@ -145,6 +145,15 @@ async function fbDocDelete(colecao, id) {
   }
 }
 
+async function fbDocApagar(colecao, id) {
+  if (!fbDisponivel() || !id) return;
+  try {
+    await fbDb.collection(colecao).doc(id).delete();
+  } catch (err) {
+    toast('Erro ao excluir: ' + err.message, 'error');
+  }
+}
+
 async function fbQuery(colecao, conditions) {
   if (!fbDisponivel()) return [];
   try {
@@ -230,7 +239,7 @@ function fbSalvarAntesSair() {
     var r = normalizarRegistros(dadosMes[mesAtual]);
     for (var i = 0; i < r.length; i++) {
       var c = r[i];
-      if (c && c.id) {
+      if (c && c.id && _idNatural(c.id)) {
         try {
           fbDb.collection('chamados').doc(c.id).set(
             fbDataComAuditoria({

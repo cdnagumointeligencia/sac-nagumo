@@ -120,13 +120,16 @@ async function fbCarregarChamados() {
       ['ativo', '==', true]
     ], function (resultados) {
       var fbDadosMes = fbMontarDadosMes(resultados);
+      var excluidos = idsChamadosExcluidos();
       for (var mes in fbDadosMes) {
         if (!dadosMes[mes]) {
-          dadosMes[mes] = fbDadosMes[mes];
+          dadosMes[mes] = fbDadosMes[mes].filter(function (fb) { return excluidos.indexOf(fb.id) === -1; });
         } else {
+          dadosMes[mes] = dadosMes[mes].filter(function (d) { return excluidos.indexOf(d.id) === -1; });
           var porId = {};
           dadosMes[mes].forEach(function (d) { if (d.id) porId[d.id] = d; });
           fbDadosMes[mes].forEach(function (fb) {
+            if (excluidos.indexOf(fb.id) !== -1) return;
             if (fb.id && porId[fb.id]) {
               for (var k in fb) {
                 if (k === 'id' || k === 'firestoreId') continue;
@@ -195,8 +198,38 @@ async function fbSalvarChamados() {
   }
 }
 
+// ==================== EXCLUSÃO DE CHAMADOS ====================
+var _idsChamadosExcluidos = null;
+function idsChamadosExcluidos() {
+  if (!_idsChamadosExcluidos) {
+    var salvos = lsGet('chamadosExcluidos');
+    _idsChamadosExcluidos = Array.isArray(salvos) ? salvos : [];
+  }
+  return _idsChamadosExcluidos;
+}
+function marcarChamadoExcluido(id) {
+  if (!id) return;
+  var lista = idsChamadosExcluidos();
+  if (lista.indexOf(id) === -1) {
+    lista.push(id);
+    if (lista.length > 1000) lista.splice(0, lista.length - 1000);
+    lsSet('chamadosExcluidos', lista);
+  }
+}
+function desmarcarChamadoExcluido(id) {
+  if (!id) return;
+  var lista = idsChamadosExcluidos();
+  var i = lista.indexOf(id);
+  if (i !== -1) {
+    lista.splice(i, 1);
+    lsSet('chamadosExcluidos', lista);
+  }
+}
+
 async function fbExcluirChamado(id) {
-  await fbDocDelete('chamados', id);
+  if (!id) return;
+  marcarChamadoExcluido(id);
+  await fbDocApagar('chamados', id);
 }
 
 async function fbLimparChamadosLegado() {
@@ -214,7 +247,8 @@ async function fbLimparChamadosLegado() {
     var r = resultados[i];
     var docId = r.firestoreId || r.id;
     if (docId && docId.indexOf(prefixo) !== 0) {
-      promises.push(fbDocDelete('chamados', docId));
+      marcarChamadoExcluido(docId);
+      promises.push(fbDocApagar('chamados', docId));
     }
   }
   await Promise.all(promises);
