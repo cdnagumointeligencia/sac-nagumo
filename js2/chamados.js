@@ -255,7 +255,7 @@ function criarLinha(d, idx) {
   btnDel.onclick = function () {
     if (!confirm('Excluir este chamado?')) return;
     var item = dadosMes[mesAtual][idx];
-    fbExcluirChamado(item.id);
+    if (_idNatural(item.id)) fbExcluirChamado(item.id);
     dadosMes[mesAtual].splice(idx, 1);
     salvarDadosMes();
     renderizarTabela();
