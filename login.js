@@ -1004,6 +1004,48 @@ async function resetarContadorSenhaSAC() {
   }
 }
 
+async function zerarSenhasSAC() {
+  if (!fbDisponivel()) { toast('Firebase indispon\u00edvel', 'error'); return; }
+  if (!confirm('Apagar TODAS as senhas SAC de CD1 e CD2 (todos os anos) e zerar a numera\u00e7\u00e3o?')) return;
+  if (!confirm('Tem certeza? Esta a\u00e7\u00e3o \u00e9 permanente e n\u00e3o pode ser desfeita.')) return;
+  try {
+    var senhas = [];
+    var snap = await fbDb.collection('senhasSac').get();
+    snap.forEach(function (d) { senhas.push(d.ref); });
+
+    var batch = fbDb.batch();
+    var i = 0;
+    for (; i < senhas.length; i++) {
+      batch.delete(senhas[i]);
+      if ((i + 1) % 400 === 0) {
+        await batch.commit();
+        batch = fbDb.batch();
+      }
+    }
+    if (i % 400 !== 0) await batch.commit();
+
+    var contadores = await fbDb.collection('contadores').get();
+    var batchCont = fbDb.batch();
+    var j = 0;
+    contadores.forEach(function (d) {
+      if (d.id.indexOf('senhasSac_') !== 0) return;
+      batchCont.set(d.ref, { proximo: 1 });
+      j++;
+      if (j % 400 === 0) {
+        batchCont.commit();
+        batchCont = fbDb.batch();
+      }
+    });
+    if (j % 400 !== 0) await batchCont.commit();
+
+    senhasSACLogin = [];
+    renderizarListaSenhasSAC();
+    toast('Banco de senhas SAC zerado. Pr\u00f3xima senha: #1', 'success');
+  } catch (err) {
+    toast('Erro ao zerar: ' + err.message, 'error');
+  }
+}
+
 // ==================== BACKUP ====================
 function baixarArquivo(conteudo, nome, tipo) {
   const blob = new Blob([conteudo], { type: tipo + ';charset=utf-8;' });
