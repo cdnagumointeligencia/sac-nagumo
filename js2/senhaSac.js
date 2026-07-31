@@ -158,11 +158,52 @@ function criarCelResponsavel(value, idx) {
   return td;
 }
 
-function adicionarSenhaSac() {
+async function fbMaxSenhaSacGlobal() {
+  if (!fbDisponivel()) return 0;
+  var ano = new Date().getFullYear();
+  try {
+    var snap = await fbDb.collection('senhasSac').where('ativo', '==', true).where('ano', '==', ano).get();
+    var max = 0;
+    snap.forEach(function (d) {
+      var n = parseInt(d.data().senha, 10) || 0;
+      if (n > max) max = n;
+    });
+    return max;
+  } catch (e) {
+    return 0;
+  }
+}
+
+async function fbProximaSenhaSac() {
+  if (!fbDisponivel()) return null;
+  var ano = new Date().getFullYear();
+  var ref = fbDb.collection('contadores').doc('senhasSac_' + ano);
+  var alvo = (await fbMaxSenhaSacGlobal()) + 1;
+  try {
+    return await fbDb.runTransaction(function (tx) {
+      return tx.get(ref).then(function (doc) {
+        var atual = doc.exists && typeof doc.data().proximo === 'number' ? doc.data().proximo : 0;
+        var prox = Math.max(atual, alvo);
+        if (!prox) prox = 1;
+        tx.set(ref, { proximo: prox + 1 });
+        return prox;
+      });
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+async function adicionarSenhaSac() {
   const hoje = new Date().toISOString().split('T')[0];
-  const maxSenha = dadosSenhasSac.reduce((max, d) => Math.max(max, parseInt(d.senha, 10) || 0), 0);
+  let proxima = await fbProximaSenhaSac();
+  if (!proxima) {
+    const localMax = dadosSenhasSac.reduce((max, d) => Math.max(max, parseInt(d.senha, 10) || 0), 0);
+    const maxGlobal = await fbMaxSenhaSacGlobal();
+    proxima = Math.max(localMax, maxGlobal) + 1;
+  }
   dadosSenhasSac.unshift({
-    chamado: '', loja: '', senha: String(maxSenha + 1),
+    chamado: '', loja: '', senha: String(proxima),
     divergencia: '', status: '', responsavel: usuarioLogado || '', observacao: '', data: hoje
   });
   garantirIds(dadosSenhasSac);
