@@ -101,10 +101,10 @@ function abrirModalUsuarios() {
   setTimeout(function () { var inp = document.getElementById('inputSenha'); if (inp) inp.focus(); }, 100);
 }
 function abrirModalBackup() { abrirModal('modalBackup'); }
-function abrirModalLojas() { abrirModal('modalLojas'); }
-function abrirModalBracos() { abrirModal('modalBracos'); }
-function abrirModalObservacoes() { abrirModal('modalObservacoes'); }
-function abrirModalDivergencias() { abrirModal('modalDivergencias'); }
+function abrirModalLojas() { renderizarListaLojas(); abrirModal('modalLojas'); }
+function abrirModalBracos() { renderizarListaBracos(); abrirModal('modalBracos'); }
+function abrirModalObservacoes() { renderizarListaObservacoes(); abrirModal('modalObservacoes'); }
+function abrirModalDivergencias() { renderizarListaDivergencias(); abrirModal('modalDivergencias'); }
 
 // ==================== SHA-256 HASH ====================
 function _sha256Fallback(message) {
@@ -424,6 +424,12 @@ function escapeAttr(str) {
 }
 
 // ==================== GERENCIAR LOJAS ====================
+function normalizarLoja(nome) {
+  var m = /^(\d{1,3})\s*-\s*(.+)$/.exec(String(nome).trim().toUpperCase());
+  if (!m) return String(nome).trim().toUpperCase();
+  return ('00' + m[1]).slice(-3) + '-' + m[2];
+}
+
 async function carregarLojasLogin() {
   try {
     var raw = localStorage.getItem('SAC_LOJAS_MERCADORIAS');
@@ -479,7 +485,7 @@ function renderizarListaLojas() {
 
 function adicionarLoja() {
   var input = document.getElementById('novaLoja');
-  var nome = input.value.trim().toUpperCase();
+  var nome = normalizarLoja(input.value);
   if (!nome) {
     toast('Digite o nome da loja', 'error');
     return;
@@ -498,7 +504,7 @@ function adicionarLoja() {
 
 function editarLoja(idx) {
   var input = document.getElementById('editLoja_' + idx);
-  var novoNome = input.value.trim().toUpperCase();
+  var novoNome = normalizarLoja(input.value);
   if (!novoNome) {
     toast('Digite o nome da loja', 'error');
     return;

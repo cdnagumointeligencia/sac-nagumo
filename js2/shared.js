@@ -681,6 +681,12 @@ function excluirBraco(idx) {
 // ==================== GERENCIAR LOJAS ====================
 let lojasMercadorias = [];
 
+function normalizarLoja(nome) {
+  const m = /^(\d{1,3})\s*-\s*(.+)$/.exec(String(nome).trim().toUpperCase());
+  if (!m) return String(nome).trim().toUpperCase();
+  return ('00' + m[1]).slice(-3) + '-' + m[2];
+}
+
 function carregarLojas() {
   try {
     const raw = localStorage.getItem('SAC_LOJAS_MERCADORIAS');
@@ -738,7 +744,7 @@ function atualizarListaLojas() {
 
 function adicionarLoja() {
   const input = document.getElementById('novaLoja');
-  const nome = input.value.trim().toUpperCase();
+  const nome = normalizarLoja(input.value);
   if (!nome) {
     toast('Digite o nome da loja', 'error');
     return;
@@ -758,7 +764,7 @@ function adicionarLoja() {
 
 function editarLoja(idx) {
   const input = document.getElementById('editLoja_' + idx);
-  const novoNome = input.value.trim().toUpperCase();
+  const novoNome = normalizarLoja(input.value);
   if (!novoNome) {
     toast('Digite o nome da loja', 'error');
     return;
