@@ -222,6 +222,17 @@ async function fbProximaSenhaSac() {
 
 async function adicionarSenhaSac() {
   const hoje = new Date().toISOString().split('T')[0];
+  const atuais = (dadosSenhasSac || []).filter(function (r) {
+    return r && extrairMesDeData(r.data) === mesAtualSenhasSac && extrairAnoDeData(r.data) === anoAtual;
+  });
+  const maisRecente = atuais.reduce(function (melhor, r) {
+    if (!melhor) return r;
+    return (Number(r.criado) || 0) > (Number(melhor.criado) || 0) ? r : melhor;
+  }, null);
+  if (maisRecente && (!maisRecente.chamado || !maisRecente.loja)) {
+    toast('Preencha o chamado e a loja da linha atual antes de abrir um novo chamado.', 'error');
+    return;
+  }
   let proxima = await fbProximaSenhaSac();
   if (!proxima) {
     const localMax = dadosSenhasSac.reduce((max, d) => Math.max(max, parseInt(d.senha, 10) || 0), 0);

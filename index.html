@@ -124,6 +124,11 @@
           <span class="config-label">Divergência</span>
           <span class="config-desc">Editar opções da coluna Divergência de cada CD</span>
         </div>
+        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalSenhasSAC()">
+          <span class="config-icon">&#128273;</span>
+          <span class="config-label">Senha SAC</span>
+          <span class="config-desc">Excluir senhas SAC e reajustar a numeração</span>
+        </div>
       </div>
     </div>
   </div>
@@ -194,6 +199,32 @@
       <div id="listaDivergencias" class="user-list" style="max-height:380px"></div>
       <div class="modal-btns" style="margin-top:16px">
         <button class="btn danger" onclick="fecharModal('modalDivergencias')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Senhas SAC -->
+  <div id="modalSenhasSAC" class="modal">
+    <div class="modal-box" style="max-width:700px">
+      <span class="modal-close" onclick="fecharModal('modalSenhasSAC')">&times;</span>
+      <h3>&#128273; Gerenciar Senhas SAC</h3>
+      <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:12px">
+        Senhas de CD1 e CD2. Exclua as indesejadas; o botão reajusta a numeração para continuar após a maior senha ainda existente.
+      </p>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="buscaSenhaSAC" class="modal-input" style="margin:0;flex:1;min-width:150px;text-align:left"
+          placeholder="Buscar por senha, chamado, loja, responsável..." onkeyup="renderizarListaSenhasSAC()">
+        <select id="filtroCdSenhaSAC" class="modal-input" style="margin:0;width:110px;text-align:left"
+          onchange="renderizarListaSenhasSAC()">
+          <option value="">Todos os CDs</option>
+          <option value="CD1">CD1</option>
+          <option value="CD2">CD2</option>
+        </select>
+        <button class="btn" onclick="resetarContadorSenhaSAC()" title="Reajusta o contador para a próxima senha seguir a maior ainda existente">Reajustar numeração</button>
+      </div>
+      <div id="listaSenhasSAC" class="user-list" style="max-height:400px"></div>
+      <div class="modal-btns" style="margin-top:16px">
+        <button class="btn danger" onclick="fecharModal('modalSenhasSAC')">Fechar</button>
       </div>
     </div>
   </div>

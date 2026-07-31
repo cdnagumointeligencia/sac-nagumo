@@ -902,6 +902,108 @@ function excluirDivergencia(idx) {
   toast(item + ' excluída', 'success');
 }
 
+// ==================== GERENCIAR SENHAS SAC ====================
+var senhasSACLogin = [];
+
+function abrirModalSenhasSAC() {
+  renderizarListaSenhasSAC();
+  abrirModal('modalSenhasSAC');
+  carregarSenhasSACLogin();
+}
+
+async function carregarSenhasSACLogin() {
+  senhasSACLogin = [];
+  if (!fbDisponivel()) { toast('Firebase indispon\u00edvel', 'error'); return; }
+  try {
+    var snap = await fbDb.collection('senhasSac').where('ativo', '==', true).get();
+    snap.forEach(function (d) {
+      var doc = d.data();
+      doc.id = d.id;
+      senhasSACLogin.push(doc);
+    });
+    senhasSACLogin.sort(function (a, b) {
+      return (Number(b.criado) || 0) - (Number(a.criado) || 0);
+    });
+    renderizarListaSenhasSAC();
+  } catch (err) {
+    toast('Erro ao carregar senhas: ' + err.message, 'error');
+  }
+}
+
+function renderizarListaSenhasSAC() {
+  var lista = document.getElementById('listaSenhasSAC');
+  if (!lista) return;
+  var buscaEl = document.getElementById('buscaSenhaSAC');
+  var filtroEl = document.getElementById('filtroCdSenhaSAC');
+  var busca = (buscaEl && buscaEl.value || '').toLowerCase();
+  var filtroCd = (filtroEl && filtroEl.value) || '';
+  var filtrados = senhasSACLogin.filter(function (s) {
+    if (!s) return false;
+    if (filtroCd && s.cd !== filtroCd) return false;
+    if (busca) {
+      var texto = ((s.senha || '') + ' ' + (s.chamado || '') + ' ' + (s.loja || '') + ' ' +
+        (s.divergencia || '') + ' ' + (s.responsavel || '') + ' ' + (s.data || '')).toLowerCase();
+      if (texto.indexOf(busca) === -1) return false;
+    }
+    return true;
+  });
+  lista.innerHTML = '';
+  if (filtrados.length === 0) {
+    var vazio = document.createElement('div');
+    vazio.style.cssText = 'padding:24px;text-align:center;color:var(--text-dim);font-size:13px';
+    vazio.textContent = 'Nenhuma senha encontrada.';
+    lista.appendChild(vazio);
+    return;
+  }
+  filtrados.forEach(function (s) {
+    var div = document.createElement('div');
+    div.className = 'user-item';
+    div.innerHTML =
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:600">' + escapeHtml('#' + (s.senha || '')) +
+          ' <span style="font-weight:400;color:var(--text-dim)">\u00b7 ' + escapeHtml(s.cd || '') + '</span></div>' +
+        '<div style="font-size:0.7rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+          escapeHtml((s.chamado || '\u2014') + ' \u00b7 ' + (s.loja || '\u2014') + ' \u00b7 ' + (s.data || '')) +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;align-items:center">' +
+        '<button class="btn danger" style="padding:4px 10px;font-size:0.7rem" onclick="excluirSenhaSAC(\'' + escapeAttr(s.id) + '\')">Excluir</button>' +
+      '</div>';
+    lista.appendChild(div);
+  });
+}
+
+async function excluirSenhaSAC(id) {
+  var s = senhasSACLogin.find(function (x) { return x.id === id; });
+  if (!s) return;
+  if (!confirm('Excluir a senha #' + s.senha + ' de ' + (s.cd || '?') + '?')) return;
+  await fbDocDelete('senhasSac', id);
+  senhasSACLogin = senhasSACLogin.filter(function (x) { return x.id !== id; });
+  renderizarListaSenhasSAC();
+  toast('Senha #' + s.senha + ' exclu\u00edda', 'success');
+}
+
+async function resetarContadorSenhaSAC() {
+  if (!fbDisponivel()) { toast('Firebase indispon\u00edvel', 'error'); return; }
+  var ano = new Date().getFullYear();
+  var max = 0;
+  (senhasSACLogin || []).forEach(function (s) {
+    if (!s) return;
+    var sAno = Number(s.ano) || parseInt(String(s.data || '').split('-')[0], 10) || ano;
+    if (sAno !== ano) return;
+    var n = parseInt(s.senha, 10) || 0;
+    if (n > max) max = n;
+  });
+  var prox = max + 1;
+  if (!confirm('Reajustar a numera\u00e7\u00e3o das senhas SAC do ano ' + ano + '?\n\nA pr\u00f3xima senha criada ser\u00e1 ' + prox + '.')) return;
+  try {
+    await fbDb.collection('contadores').doc('senhasSac_' + ano).set({ proximo: prox });
+    toast('Numera\u00e7\u00e3o reajustada (pr\u00f3xima senha: ' + prox + ')', 'success');
+  } catch (err) {
+    toast('Erro ao reajustar: ' + err.message, 'error');
+  }
+}
+
 // ==================== BACKUP ====================
 function baixarArquivo(conteudo, nome, tipo) {
   const blob = new Blob([conteudo], { type: tipo + ';charset=utf-8;' });
