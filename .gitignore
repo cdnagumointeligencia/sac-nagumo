@@ -20,3 +20,6 @@ desktop.ini
 
 # Conversas locais (nao vao para o GitHub)
 conversas/
+
+# Link do site online (local, nao vai para o GitHub)
+link.txt
