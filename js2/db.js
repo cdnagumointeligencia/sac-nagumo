@@ -271,7 +271,8 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
     resultados.forEach(function (r) {
       var item = {};
       for (var k in r) {
-        if (k !== 'firestoreId' && k !== 'cd' && k !== 'ano' && k !== 'mes' &&
+        if (k !== 'firestoreId' && k !== 'cd' && k !== 'ano' &&
+          (k !== 'mes' || colecao === 'produtividade') &&
           k !== 'mesNome' && k !== 'ativo' && k !== 'criadoEm' && k !== 'criadoPor' &&
           k !== 'alteradoEm' && k !== 'alteradoPor') {
           item[k] = r[k];
@@ -335,7 +336,8 @@ async function fbCarregarColecao(colecao, alvo) {
     if (id && excluidos.indexOf(id) !== -1) return;
     var item = {};
     for (var k in r) {
-      if (k !== 'firestoreId' && k !== 'cd' && k !== 'ano' && k !== 'mes' &&
+      if (k !== 'firestoreId' && k !== 'cd' && k !== 'ano' &&
+        (k !== 'mes' || colecao === 'produtividade') &&
         k !== 'mesNome' && k !== 'ativo' && k !== 'criadoEm' && k !== 'criadoPor' &&
         k !== 'alteradoEm' && k !== 'alteradoPor') {
         item[k] = r[k];

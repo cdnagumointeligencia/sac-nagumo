@@ -72,12 +72,13 @@ function totalProdutividade(item) {
 
 function atualizarTotaisProdutividade() {
   var soma1 = 0, soma2 = 0, soma3 = 0;
-  (dadosProdutividade || []).forEach(function (item) {
-    if (!item) return;
+  for (var m = 1; m <= 12; m++) {
+    var item = melhorRegistroProdutividade(m);
+    if (!item) continue;
     soma1 += Number(item.turno1) || 0;
     soma2 += Number(item.turno2) || 0;
     soma3 += Number(item.turno3) || 0;
-  });
+  }
   var geral = soma1 + soma2 + soma3;
   var set = function (id, v) {
     var el = document.getElementById(id);
@@ -93,18 +94,17 @@ function atualizarTotaisProdutividade() {
   set('prodSumGeral', geral);
 }
 
-function criarCelTurnoProdutividade(idx, campo, valor) {
+function criarCelTurnoProdutividade(item, campo) {
   const td = document.createElement('td');
   const inp = document.createElement('input');
   inp.type = 'text';
   inp.inputMode = 'numeric';
   inp.dataset.noCapitalize = '1';
-  inp.value = valor || '';
+  inp.value = item[campo] || '';
   inp.placeholder = '0';
   inp.addEventListener('input', function () {
     const v = inp.value.replace(/\D/g, '');
     if (inp.value !== v) inp.value = v;
-    const item = dadosProdutividade[idx];
     if (!item) return;
     item[campo] = v;
     item.total = totalProdutividade(item) ? String(totalProdutividade(item)) : '';
@@ -121,6 +121,19 @@ function criarCelTurnoProdutividade(idx, campo, valor) {
   return td;
 }
 
+function melhorRegistroProdutividade(mes) {
+  var melhor = null;
+  (dadosProdutividade || []).forEach(function (r) {
+    if (!r || Number(r.mes) !== mes) return;
+    if (!melhor) { melhor = r; return; }
+    var campos = function (x) { return ((x.turno1 ? 1 : 0) + (x.turno2 ? 1 : 0) + (x.turno3 ? 1 : 0)); };
+    var maisCampos = campos(r) > campos(melhor);
+    var mesmosCampos = campos(r) === campos(melhor) && totalProdutividade(r) > totalProdutividade(melhor);
+    if (maisCampos || mesmosCampos) melhor = r;
+  });
+  return melhor;
+}
+
 function renderizarProdutividade() {
   const elCd = document.getElementById('prodTitleCd');
   if (elCd) elCd.textContent = cdAtual;
@@ -128,17 +141,14 @@ function renderizarProdutividade() {
   if (elMes) elMes.textContent = String(anoAtual);
 
   garantirMesesProdutividade();
-  dadosProdutividade.sort(function (a, b) {
-    return (Number(a.mes) || 0) - (Number(b.mes) || 0);
-  });
 
   const tbody = document.getElementById('produtividadeBody');
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  dadosProdutividade.forEach(function (item, idx) {
-    if (!item || !item.mes) return;
-    const m = Number(item.mes);
+  for (var m = 1; m <= 12; m++) {
+    const item = melhorRegistroProdutividade(m);
+    if (!item) continue;
     const vazio = !(item.turno1 || item.turno2 || item.turno3);
     item.total = totalProdutividade(item) ? String(totalProdutividade(item)) : '';
 
@@ -150,9 +160,9 @@ function renderizarProdutividade() {
     tdMes.textContent = MESES[m - 1] || String(m);
     tr.appendChild(tdMes);
 
-    tr.appendChild(criarCelTurnoProdutividade(idx, 'turno1', item.turno1));
-    tr.appendChild(criarCelTurnoProdutividade(idx, 'turno2', item.turno2));
-    tr.appendChild(criarCelTurnoProdutividade(idx, 'turno3', item.turno3));
+    tr.appendChild(criarCelTurnoProdutividade(item, 'turno1'));
+    tr.appendChild(criarCelTurnoProdutividade(item, 'turno2'));
+    tr.appendChild(criarCelTurnoProdutividade(item, 'turno3'));
 
     const tdTotal = document.createElement('td');
     tdTotal.className = 'total-col';
@@ -160,7 +170,7 @@ function renderizarProdutividade() {
     tr.appendChild(tdTotal);
 
     tbody.appendChild(tr);
-  });
+  }
 
   atualizarTotaisProdutividade();
 }
