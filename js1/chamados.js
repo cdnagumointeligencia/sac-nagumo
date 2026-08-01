@@ -12,7 +12,6 @@ function mudarPagina(pagina) {
   document.getElementById('pageChamados').classList.toggle('active', pagina === 'chamados');
   document.getElementById('pageSenhaSac').classList.toggle('active', pagina === 'senhaSac');
   document.getElementById('pageNotasDevolucao').classList.toggle('active', pagina === 'notasDevolucao');
-  document.getElementById('pageProdutividade').classList.toggle('active', pagina === 'produtividade');
   document.getElementById('pageDashboard').classList.toggle('active', pagina === 'dashboard');
   document.getElementById('pageMercadoriasNF').classList.toggle('active', pagina === 'mercadoriasNF');
   document.getElementById('pageDashboardMerc').classList.toggle('active', pagina === 'dashboardMerc');
@@ -20,7 +19,7 @@ function mudarPagina(pagina) {
   document.getElementById('btnNavNotasDev').classList.toggle('active-toggle', pagina === 'notasDevolucao');
   document.getElementById('btnNavDashboard').classList.toggle('active-toggle', pagina === 'dashboard');
   document.getElementById('btnNavMercadoriasNF').classList.toggle('active-toggle', pagina === 'mercadoriasNF');
-  document.getElementById('tituloPagina').style.display = (pagina === 'dashboard' || pagina === 'dashboardMerc' || pagina === 'produtividade' || pagina === 'senhaSac' || pagina === 'notasDevolucao' || pagina === 'mercadoriasNF') ? 'none' : '';
+  document.getElementById('tituloPagina').style.display = (pagina === 'dashboard' || pagina === 'dashboardMerc' || pagina === 'senhaSac' || pagina === 'notasDevolucao' || pagina === 'mercadoriasNF') ? 'none' : '';
   document.body.classList.toggle('dash-active', pagina === 'dashboard' || pagina === 'dashboardMerc');
   document.body.classList.toggle('cd1-active', cdAtual === 'CD1');
   document.body.classList.toggle('cd2-active', cdAtual === 'CD2');
@@ -30,9 +29,6 @@ function mudarPagina(pagina) {
     document.getElementById('tituloPagina').textContent = 'Senha SAC';
   } else if (pagina === 'notasDevolucao') {
     document.getElementById('tituloPagina').textContent = 'Notas Devolução';
-  } else if (pagina === 'produtividade') {
-    document.getElementById('tituloPagina').textContent = 'Produtividade';
-    renderizarProdutividade();
   } else if (pagina === 'dashboard') {
     mesAtualDash = mesAtual;
     montarAbasGenerico('tabsMesDash', mesAtualDash, selecionarMesDash);
@@ -165,6 +161,11 @@ function criarLinha(d, idx) {
       }
     }
     salvarDadosMes();
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) {
+      fbAtualizarCampoChamado(docId, 'setor', selSetor.value);
+      fbAtualizarCampoChamado(docId, 'braco', dadosMes[mesAtual][idx].braco || '');
+    }
     renderizarTabela();
     atualizarTotais();
   };
@@ -191,6 +192,8 @@ function criarLinha(d, idx) {
     dadosMes[mesAtual][idx].braco = inpBraco.value;
     tdBraco.title = inpBraco.value;
     salvarDadosMes();
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) fbAtualizarCampoChamado(docId, 'braco', inpBraco.value);
   };
   tdBraco.appendChild(inpBraco);
   tr.appendChild(tdBraco);
@@ -235,6 +238,8 @@ function criarLinha(d, idx) {
     dadosMes[mesAtual][idx].usuario = selUser.value;
     tdUser.title = selUser.value;
     salvarDadosMes();
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) fbAtualizarCampoChamado(docId, 'usuario', selUser.value);
     atualizarTotais();
     if (selUser.value) {
       atualizarUsuarioNotaDev(dadosMes[mesAtual][idx].chamado, dadosMes[mesAtual][idx].loja, selUser.value);
@@ -400,7 +405,7 @@ async function criarNotaDevAutomatica(chamado) {
     return;
   }
   dadosNotasDev.push(novaNota);
-  salvarNotasDev();
+  salvarNotasDevItem(novaNota);
   toast('Nota de devolu\u00e7\u00e3o criada automaticamente!', 'success');
 }
 
@@ -408,7 +413,7 @@ function atualizarUsuarioNotaDev(chamado, loja, usuario) {
   const nota = dadosNotasDev.find(n => n.chamado === chamado && n.loja === loja);
   if (nota && !nota.usuario) {
     nota.usuario = usuario;
-    salvarNotasDev();
+    salvarNotasDevItem(nota);
   }
 }
 

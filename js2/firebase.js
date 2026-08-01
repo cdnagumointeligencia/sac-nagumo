@@ -100,17 +100,25 @@ async function fbDocCreate(colecao, id, data, extra) {
   if (!fbDisponivel()) return true;
   try {
     var ref = fbDb.collection(colecao).doc(id);
-    var snap = await ref.get();
-    if (snap.exists) {
-      var existing = snap.data();
-      if (existing && existing.ativo === false) {
-        await ref.set(fbDataComAuditoria(data, extra));
-        return true;
-      }
+    var duplicado = false;
+    await fbDb.runTransaction(function (tx) {
+      return tx.get(ref).then(function (snap) {
+        if (snap.exists) {
+          var existing = snap.data();
+          if (existing && existing.ativo === false) {
+            tx.set(ref, fbDataComAuditoria(data, extra));
+          } else {
+            duplicado = true;
+          }
+        } else {
+          tx.set(ref, fbDataComAuditoria(data, extra));
+        }
+      });
+    });
+    if (duplicado) {
       toast('Registro duplicado: j\u00e1 existe no sistema!', 'error');
       return false;
     }
-    await ref.set(fbDataComAuditoria(data, extra));
     return true;
   } catch (err) {
     toast('Erro ao criar: ' + err.message, 'error');
@@ -232,76 +240,32 @@ function fbSalvarAntesSair() {
   clearTimeout(_fbTimerMerc);
   clearTimeout(_fbTimerProd);
 
-  var ano = new Date().getFullYear();
   var erros = [];
 
-  if (typeof dadosMes !== 'undefined' && mesAtual) {
-    var r = normalizarRegistros(dadosMes[mesAtual]);
-    for (var i = 0; i < r.length; i++) {
-      var c = r[i];
-      if (c && c.id && _idNatural(c.id)) {
-        try {
-          fbDb.collection('chamados').doc(c.id).set(
-            fbDataComAuditoria({
-              id: c.id,
-              chamado: c.chamado || '', loja: c.loja || '', braco: c.braco || '',
-              turno: c.turno || '', setor: c.setor || '', plu: c.plu || '',
-              divergencia: c.divergencia || '', observacao: c.observacao || '',
-              obsTexto: c.obsTexto || '', conferente: c.conferente || '',
-              usuario: c.usuario || '', dataAbertura: c.dataAbertura || '', dataFechamento: c.dataFechamento || ''
-            }, {
-              cd: cdAtual,
-              ano: ano,
-              mes: MESES.indexOf(mesAtual),
-              mesNome: mesAtual
-            }),
-            { merge: true }
-          );
-        } catch (e) { erros.push('chamados'); }
-      }
+  function flushPendentes(pendentes, nome) {
+    if (!pendentes) return;
+    for (var id in pendentes) {
+      try {
+        fbSalvarItemColecao(nome, pendentes[id]);
+      } catch (e) { erros.push(nome); }
     }
   }
 
-  if (typeof dadosSenhasSac !== 'undefined') {
-    for (var i = 0; i < dadosSenhasSac.length; i++) {
-      var item = dadosSenhasSac[i];
-      var docId = item.id || item.firestoreId;
-      if (!docId) continue;
-      try {
-        fbDb.collection('senhasSac').doc(docId).set(
-          fbDataComAuditoria(item, { cd: cdAtual }),
-          { merge: true }
-        );
-      } catch (e) { erros.push('senhaSac'); }
-    }
+  if (typeof _pendentesSenhaItem !== 'undefined') {
+    flushPendentes(_pendentesSenhaItem, 'senhasSac');
+    _pendentesSenhaItem = {};
   }
-
-  if (typeof dadosNotasDev !== 'undefined') {
-    for (var i = 0; i < dadosNotasDev.length; i++) {
-      var item = dadosNotasDev[i];
-      var docId = item.id || item.firestoreId;
-      if (!docId) continue;
-      try {
-        fbDb.collection('notasDevolucao').doc(docId).set(
-          fbDataComAuditoria(item, { cd: cdAtual }),
-          { merge: true }
-        );
-      } catch (e) { erros.push('notasDevolucao'); }
-    }
+  if (typeof _pendentesNotasItem !== 'undefined') {
+    flushPendentes(_pendentesNotasItem, 'notasDevolucao');
+    _pendentesNotasItem = {};
   }
-
-  if (typeof dadosMercadoriasNF !== 'undefined') {
-    for (var i = 0; i < dadosMercadoriasNF.length; i++) {
-      var item = dadosMercadoriasNF[i];
-      var docId = item.id || item.firestoreId;
-      if (!docId) continue;
-      try {
-        fbDb.collection('mercadoriasNF').doc(docId).set(
-          fbDataComAuditoria(item, { cd: cdAtual }),
-          { merge: true }
-        );
-      } catch (e) { erros.push('mercadoriasNF'); }
-    }
+  if (typeof _pendentesMercItem !== 'undefined') {
+    flushPendentes(_pendentesMercItem, 'mercadoriasNF');
+    _pendentesMercItem = {};
+  }
+  if (typeof _pendentesProdItem !== 'undefined') {
+    flushPendentes(_pendentesProdItem, 'produtividade');
+    _pendentesProdItem = {};
   }
 
   if (erros.length > 0) {
@@ -310,16 +274,82 @@ function fbSalvarAntesSair() {
   _salvandoAntesSair = false;
 }
 
+// ==================== CONTAGEM LOCAL (fallback) ====================
+function _contarLocalChamados(cd) {
+  var total = 0;
+  var cds = cd ? [cd] : ['CD1', 'CD2'];
+  for (var c = 0; c < cds.length; c++) {
+    var chaves = ['SAC_SAC_' + cds[c] + '_dados', 'SAC_' + cds[c] + '_dados', 'SAC_' + cds[c] + '_SAC_dados'];
+    for (var k = 0; k < chaves.length; k++) {
+      try {
+        var raw = localStorage.getItem(chaves[k]);
+        if (raw) {
+          var arr = JSON.parse(raw);
+          for (var i = 0; i < arr.length; i++) {
+            var d = arr[i];
+            if (Array.isArray(d.registros)) total += d.registros.length;
+            else if (d.registros && typeof d.registros === 'object') total += Object.keys(d.registros).length;
+          }
+          break;
+        }
+      } catch (e) {}
+    }
+  }
+  return total;
+}
+
+function _contarLocalColecao(sufixo, cd) {
+  var cds = cd ? [cd] : ['CD1', 'CD2'];
+  for (var c = 0; c < cds.length; c++) {
+    var chaves = ['SAC_' + cds[c] + '_' + sufixo, 'SAC_SAC_' + cds[c] + '_' + sufixo];
+    for (var k = 0; k < chaves.length; k++) {
+      try {
+        var raw = localStorage.getItem(chaves[k]);
+        if (raw) return JSON.parse(raw).length || 0;
+      } catch (e) {}
+    }
+  }
+  return 0;
+}
+
 // ==================== BACKUP via Firestore ====================
-async function fbCarregarTudoBackup() {
+async function fbCarregarTudoBackup(opcoes) {
   var resultado = { chamados: {}, senhasSac: [], notasDev: [], mercadoriasNF: [], produtividade: [], usuarios: [] };
 
   if (!fbDisponivel()) return resultado;
 
+  opcoes = opcoes || {};
+  var cds = opcoes.cds || ['CD1', 'CD2'];
+  var anos = opcoes.anos;
+  if (!anos || anos.length === 0) {
+    anos = [];
+    var anoCorrente = new Date().getFullYear();
+    var qtdAnos = (typeof ANOS_BACKUP === 'number' && ANOS_BACKUP >= 0) ? ANOS_BACKUP : 1;
+    for (var i = qtdAnos; i >= 0; i--) anos.push(anoCorrente - i);
+  }
+
+  function buscarPeriodo(colecao, onDoc) {
+    var promessas = [];
+    cds.forEach(function (cd) {
+      anos.forEach(function (ano) {
+        promessas.push(
+          fbDb.collection(colecao)
+            .where('cd', '==', cd)
+            .where('ano', '==', ano)
+            .where('ativo', '==', true)
+            .get()
+            .then(function (snap) {
+              snap.forEach(function (doc) { onDoc(doc.data()); });
+            })
+            .catch(function () {})
+        );
+      });
+    });
+    return Promise.all(promessas);
+  }
+
   try {
-    var chamSnap = await fbDb.collection('chamados').where('ativo', '==', true).get();
-    chamSnap.forEach(function (doc) {
-      var d = doc.data();
+    await buscarPeriodo('chamados', function (d) {
       var cd = d.cd || '';
       var mesNome = d.mesNome || '';
       if (!resultado.chamados[cd]) resultado.chamados[cd] = {};
@@ -329,24 +359,19 @@ async function fbCarregarTudoBackup() {
   } catch (e) {}
 
   try {
-    var snap = await fbDb.collection('senhasSac').where('ativo', '==', true).get();
-    snap.forEach(function (doc) { resultado.senhasSac.push(doc.data()); });
+    await buscarPeriodo('senhasSac', function (d) { resultado.senhasSac.push(d); });
   } catch (e) {}
 
   try {
-    var snap = await fbDb.collection('notasDevolucao').where('ativo', '==', true).get();
-    snap.forEach(function (doc) { resultado.notasDev.push(doc.data()); });
+    await buscarPeriodo('notasDevolucao', function (d) { resultado.notasDev.push(d); });
   } catch (e) {}
 
   try {
-    var snap = await fbDb.collection('mercadoriasNF').where('ativo', '==', true).get();
-    snap.forEach(function (doc) { resultado.mercadoriasNF.push(doc.data()); });
+    await buscarPeriodo('mercadoriasNF', function (d) { resultado.mercadoriasNF.push(d); });
   } catch (e) {}
 
   try {
-    var snap = await fbDb.collection('produtividade').where('ativo', '==', true).get();
-    snap.forEach(function (doc) {
-      var d = doc.data();
+    await buscarPeriodo('produtividade', function (d) {
       var item = {};
       for (var k in d) {
         if (k !== 'cd' && k !== 'ano' && k !== 'ativo' && k !== 'criadoEm' && k !== 'criadoPor' &&

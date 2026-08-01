@@ -26,7 +26,6 @@
       <button class="btn" onclick="mudarPagina('mercadoriasNF')" id="btnNavMercadoriasNF">Mercadorias s/ NF</button>
       <button class="btn" onclick="mudarPagina('dashboard')" id="btnNavDashboard">Dashboard</button>
       <button class="btn" onclick="toggleFiltros()" title="Filtros">&#128269; Filtros</button>
-      <button class="btn cd2-only" onclick="mudarPagina('produtividade')" id="btnNavProdutividade">Produtividade</button>
       
     </div>
 
@@ -242,62 +241,6 @@
       </div>
     </div>
 
-    <!-- ========== PÁGINA PRODUTIVIDADE ========== -->
-    <div id="pageProdutividade" class="page">
-      <div class="page-layout">
-        <div class="page-main">
-          <div class="page-header">
-            <h1 id="prodTitle">Produtividade — <span id="prodTitleCd">CD1</span> · <span id="prodTitleMes">Julho 2026</span></h1>
-          </div>
-
-          <div class="prod-wrap">
-            <div class="prod-card">
-              <table id="tabelaProdutividade">
-                <thead>
-                  <tr>
-                    <th>Mês</th>
-                    <th>1° Turno</th>
-                    <th>2° Turno</th>
-                    <th>3° Turno</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody id="produtividadeBody"></tbody>
-                <tfoot>
-                  <tr>
-                    <td><strong>Total do Ano</strong></td>
-                    <td class="total-col" id="prodTotal1">0</td>
-                    <td class="total-col" id="prodTotal2">0</td>
-                    <td class="total-col" id="prodTotal3">0</td>
-                    <td class="total-col" id="prodTotalGeral">0</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-
-            <div class="prod-summary">
-              <div class="prod-sum-item"><div class="ps-label">1° Turno</div><div class="ps-value" id="prodSum1">0</div></div>
-              <div class="prod-sum-item"><div class="ps-label">2° Turno</div><div class="ps-value" id="prodSum2">0</div></div>
-              <div class="prod-sum-item"><div class="ps-label">3° Turno</div><div class="ps-value" id="prodSum3">0</div></div>
-              <div class="prod-sum-item prod-total"><div class="ps-label">Total Geral</div><div class="ps-value" id="prodSumGeral">0</div></div>
-            </div>
-          </div>
-        </div>
-        <div class="page-actions">
-          <button class="page-action-btn" onclick="mudarPagina('chamados')" title="Voltar">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-          </button>
-          <button class="page-action-btn" onclick="gerarPdfProdutividade()" title="Gerar PDF">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          </button>
-          <button class="page-action-btn page-action-add" onclick="salvarProdutividade()" title="Salvar">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          </button>
-
-        </div>
-      </div>
-    </div>
-
     <!-- ========== PÁGINA MERCADORIAS SEM NF ========== -->
     <div id="pageMercadoriasNF" class="page">
       <div class="page-layout page-layout-wide">
@@ -463,7 +406,6 @@
   <script src="js1/notasDev.js"></script>
   <script src="js1/mercadorias.js"></script>
   <script src="js1/dashboard.js"></script>
-  <script src="js1/produtividade.js"></script>
   <script src="js1/usuarios.js"></script>
   <script src="js1/backup.js"></script>
   <script src="js1/app.js"></script>

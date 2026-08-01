@@ -44,6 +44,7 @@ const TIPOS_VOLUME = ['Caixas', 'Kilo'];
 const SETORES_DASH = ['Sorter', 'Expedição', 'FLV', 'Perecíveis', 'Recebimento', 'Transporte', 'Separação', 'PCO', 'Indevido'];
 const SETORES_ERRO = ['Sorter', 'Expedição', 'FLV', 'Perecíveis', 'Recebimento', 'Transporte', 'Separação', 'PCO'];
 const CHAMADOS_POR_PAGINA = 50;
+const ANOS_BACKUP = 1;
 const LOJAS_MERCADORIAS_DEFAULT = [
   '001-SOLAR', '002-MOGI 1 MOD', '003-MADALENA', '004-GRIMALDI', '006-IGUATEMI',
   '007-TIBURCIO', '008-JUREMA', '009-COLONIAL', '010-MORUMBI', '011-V,VERDE',

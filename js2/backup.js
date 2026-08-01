@@ -22,37 +22,6 @@ function contarRegistrosBackup(backup) {
   return total;
 }
 
-function _contarLocalChamados(cd) {
-  var total = 0;
-  var chaves = ['SAC_SAC_' + cd + '_dados', 'SAC_' + cd + '_dados', 'SAC_' + cd + '_SAC_dados'];
-  for (var k = 0; k < chaves.length; k++) {
-    try {
-      var raw = localStorage.getItem(chaves[k]);
-      if (raw) {
-        var arr = JSON.parse(raw);
-        for (var i = 0; i < arr.length; i++) {
-          var d = arr[i];
-          if (Array.isArray(d.registros)) total += d.registros.length;
-          else if (d.registros && typeof d.registros === 'object') total += Object.keys(d.registros).length;
-        }
-        return total;
-      }
-    } catch (e) {}
-  }
-  return total;
-}
-
-function _contarLocalColecao(sufixo) {
-  var chaves = ['SAC_' + cdAtual + '_' + sufixo, 'SAC_SAC_' + cdAtual + '_' + sufixo];
-  for (var k = 0; k < chaves.length; k++) {
-    try {
-      var raw = localStorage.getItem(chaves[k]);
-      if (raw) return JSON.parse(raw).length || 0;
-    } catch (e) {}
-  }
-  return 0;
-}
-
 function contarRegistrosAtuais(cdFiltro) {
   var cds = cdFiltro ? [cdFiltro] : ['CD1', 'CD2'];
   var total = 0;
@@ -63,9 +32,9 @@ function contarRegistrosAtuais(cdFiltro) {
 
   if (!cdFiltro) {
     for (var i = 0; i < cds.length; i++) {
-      total += _contarLocalColecao('SENHAS_SAC_dados');
-      total += _contarLocalColecao('NOTAS_DEV_dados');
-      total += _contarLocalColecao('MERCADORIAS_NF_dados');
+      total += _contarLocalColecao('SENHAS_SAC_dados', cdAtual);
+      total += _contarLocalColecao('NOTAS_DEV_dados', cdAtual);
+      total += _contarLocalColecao('MERCADORIAS_NF_dados', cdAtual);
     }
   }
 

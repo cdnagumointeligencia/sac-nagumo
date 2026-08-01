@@ -2,6 +2,7 @@
 let dadosNotasDev = [];
 
 var _fbTimerNotas = null;
+var _pendentesNotasItem = {};
 
 async function carregarNotasDev() {
   var fbOk = await fbCarregarColecao('notasDevolucao', dadosNotasDev);
@@ -15,10 +16,34 @@ async function carregarNotasDev() {
   }
 }
 
-async function salvarNotasDev() {
+function flushNotasDevItens() {
+  var pendentes = _pendentesNotasItem;
+  _pendentesNotasItem = {};
+  for (var id in pendentes) {
+    fbSalvarItemColecao('notasDevolucao', pendentes[id]);
+  }
+}
+
+function salvarNotasDevItem(item) {
+  if (!item) return;
+  if (!item.id) item.id = gerarId();
+  lsSetCd('NOTAS_DEV_dados', dadosNotasDev);
+  if (!fbDisponivel() || !cdAtual) return;
+  _pendentesNotasItem[item.id] = item;
+  clearTimeout(_fbTimerNotas);
+  _fbTimerNotas = setTimeout(flushNotasDevItens, 300);
+}
+
+function salvarNotasDev() {
+  (dadosNotasDev || []).forEach(function (item) {
+    if (!item) return;
+    if (!item.id) item.id = gerarId();
+    if (fbDisponivel() && cdAtual) _pendentesNotasItem[item.id] = item;
+  });
   lsSetCd('NOTAS_DEV_dados', dadosNotasDev);
   clearTimeout(_fbTimerNotas);
-  _fbTimerNotas = setTimeout(function () { fbSalvarColecao('notasDevolucao', dadosNotasDev); }, 500);
+  flushNotasDevItens();
+  toast('Notas salvas', 'success');
 }
 
 function renderizarNotasDevolucao() {
@@ -52,7 +77,7 @@ function renderizarNotasDevolucao() {
     tr.appendChild(criarCelInputNotaDev('text', d.chamado, i, 'chamado'));
     tr.appendChild(criarCelSelectLoja(d.loja || '', (val) => {
       dadosNotasDev[i].loja = val;
-      salvarNotasDev();
+      salvarNotasDevItem(dadosNotasDev[i]);
     }));
     tr.appendChild(criarCelInputNotaDev('text', d.plu, i, 'plu'));
     tr.appendChild(criarCelInputNotaDev('date', d.data, i, 'data'));
@@ -70,9 +95,14 @@ function renderizarNotasDevolucao() {
     btnDel.onclick = function () {
       if (!confirm('Excluir esta nota?')) return;
       var item = dadosNotasDev[i];
+      var itemId = item && (item.id || item.firestoreId);
+      if (itemId) {
+        marcarItemColecaoExcluido(itemId);
+        delete _pendentesNotasItem[itemId];
+      }
       fbExcluirItemColecao('notasDevolucao', item);
       dadosNotasDev.splice(i, 1);
-      salvarNotasDev();
+      lsSetCd('NOTAS_DEV_dados', dadosNotasDev);
       renderizarNotasDevolucao();
       toast('Nota exclu\u00edda', 'success');
     };
@@ -98,7 +128,7 @@ function criarCelInputNotaDev(type, value, idx, field) {
     }
     dadosNotasDev[idx][field] = inp.value;
     td.title = inp.value;
-    salvarNotasDev();
+    salvarNotasDevItem(dadosNotasDev[idx]);
   };
   td.appendChild(inp);
   return td;
@@ -135,7 +165,7 @@ function criarCelInputNotaDevNota(idx, value) {
         }
       }
     }
-    salvarNotasDev();
+    salvarNotasDevItem(dadosNotasDev[idx]);
   };
   td.appendChild(inp);
   return td;
@@ -159,7 +189,7 @@ function criarCelSelectUsuarioDev(value, idx) {
   sel.onchange = () => {
     dadosNotasDev[idx].usuario = sel.value;
     td.title = sel.value;
-    salvarNotasDev();
+    salvarNotasDevItem(dadosNotasDev[idx]);
   };
   td.appendChild(sel);
   return td;
@@ -186,7 +216,7 @@ function adicionarNotaDevolucao() {
     nota: '', usuario: '', statusNf: 'Aguardando', observacao: ''
   });
   garantirIds(dadosNotasDev);
-  salvarNotasDev();
+  salvarNotasDevItem(dadosNotasDev[dadosNotasDev.length - 1]);
   renderizarNotasDevolucao();
   toast('Nota adicionada', 'success');
 }

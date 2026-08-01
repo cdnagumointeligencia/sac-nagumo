@@ -442,8 +442,6 @@ async function salvarDadosMes() {
   const registro = { mes: mesAtual, registros };
   if (idx >= 0) lsDados[idx] = registro; else lsDados.push(registro);
   lsSet('dados', lsDados);
-  clearTimeout(_fbTimerChamados);
-  _fbTimerChamados = setTimeout(fbSalvarChamados, 500);
 }
 
 // ==================== SNAPSHOTS ====================

@@ -165,6 +165,11 @@ function criarLinha(d, idx) {
       }
     }
     salvarDadosMes();
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) {
+      fbAtualizarCampoChamado(docId, 'setor', selSetor.value);
+      fbAtualizarCampoChamado(docId, 'braco', dadosMes[mesAtual][idx].braco || '');
+    }
     renderizarTabela();
     atualizarTotais();
   };
@@ -191,6 +196,8 @@ function criarLinha(d, idx) {
     dadosMes[mesAtual][idx].braco = inpBraco.value;
     tdBraco.title = inpBraco.value;
     salvarDadosMes();
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) fbAtualizarCampoChamado(docId, 'braco', inpBraco.value);
   };
   tdBraco.appendChild(inpBraco);
   tr.appendChild(tdBraco);
@@ -235,6 +242,8 @@ function criarLinha(d, idx) {
     dadosMes[mesAtual][idx].usuario = selUser.value;
     tdUser.title = selUser.value;
     salvarDadosMes();
+    var docId = dadosMes[mesAtual][idx].id;
+    if (docId) fbAtualizarCampoChamado(docId, 'usuario', selUser.value);
     atualizarTotais();
     if (selUser.value) {
       atualizarUsuarioNotaDev(dadosMes[mesAtual][idx].chamado, dadosMes[mesAtual][idx].loja, selUser.value);
@@ -400,7 +409,7 @@ async function criarNotaDevAutomatica(chamado) {
     return;
   }
   dadosNotasDev.push(novaNota);
-  salvarNotasDev();
+  salvarNotasDevItem(novaNota);
   toast('Nota de devolu\u00e7\u00e3o criada automaticamente!', 'success');
 }
 
@@ -408,7 +417,7 @@ function atualizarUsuarioNotaDev(chamado, loja, usuario) {
   const nota = dadosNotasDev.find(n => n.chamado === chamado && n.loja === loja);
   if (nota && !nota.usuario) {
     nota.usuario = usuario;
-    salvarNotasDev();
+    salvarNotasDevItem(nota);
   }
 }
 

@@ -5,6 +5,7 @@ let dashMercConferenteFiltro = '';
 const norm = s => (s || '').trim().toUpperCase();
 
 var _fbTimerMerc = null;
+var _pendentesMercItem = {};
 
 async function carregarMercadoriasNF() {
   var fbOk = await fbCarregarColecao('mercadoriasNF', dadosMercadoriasNF);
@@ -18,10 +19,34 @@ async function carregarMercadoriasNF() {
   }
 }
 
-async function salvarMercadoriasNF() {
+function flushMercadoriasItens() {
+  var pendentes = _pendentesMercItem;
+  _pendentesMercItem = {};
+  for (var id in pendentes) {
+    fbSalvarItemColecao('mercadoriasNF', pendentes[id]);
+  }
+}
+
+function salvarMercadoriasNFItem(item) {
+  if (!item) return;
+  if (!item.id) item.id = gerarId();
+  lsSetCd('MERCADORIAS_NF_dados', dadosMercadoriasNF);
+  if (!fbDisponivel() || !cdAtual) return;
+  _pendentesMercItem[item.id] = item;
+  clearTimeout(_fbTimerMerc);
+  _fbTimerMerc = setTimeout(flushMercadoriasItens, 300);
+}
+
+function salvarMercadoriasNF() {
+  (dadosMercadoriasNF || []).forEach(function (item) {
+    if (!item) return;
+    if (!item.id) item.id = gerarId();
+    if (fbDisponivel() && cdAtual) _pendentesMercItem[item.id] = item;
+  });
   lsSetCd('MERCADORIAS_NF_dados', dadosMercadoriasNF);
   clearTimeout(_fbTimerMerc);
-  _fbTimerMerc = setTimeout(function () { fbSalvarColecao('mercadoriasNF', dadosMercadoriasNF); }, 500);
+  flushMercadoriasItens();
+  toast('Mercadorias salvas', 'success');
 }
 
 function selecionarMesMercadoriasNF(mes) {
@@ -79,9 +104,14 @@ function renderizarMercadoriasNF() {
     btnDel.onclick = function () {
       if (!confirm('Excluir este registro?')) return;
       var item = dadosMercadoriasNF[i];
+      var itemId = item && (item.id || item.firestoreId);
+      if (itemId) {
+        marcarItemColecaoExcluido(itemId);
+        delete _pendentesMercItem[itemId];
+      }
       fbExcluirItemColecao('mercadoriasNF', item);
       dadosMercadoriasNF.splice(i, 1);
-      salvarMercadoriasNF();
+      lsSetCd('MERCADORIAS_NF_dados', dadosMercadoriasNF);
       renderizarMercadoriasNF();
       toast('Registro exclu\u00eddo', 'success');
     };
@@ -108,7 +138,7 @@ function criarCelInputMercNF(type, value, idx, field) {
       inp.value = inp.value.replace(/[^0-9]/g, '');
       dadosMercadoriasNF[idx][field] = inp.value;
       td.title = inp.value;
-      salvarMercadoriasNF();
+      salvarMercadoriasNFItem(dadosMercadoriasNF[idx]);
     };
   } else {
     inp.oninput = () => {
@@ -119,7 +149,7 @@ function criarCelInputMercNF(type, value, idx, field) {
       }
       dadosMercadoriasNF[idx][field] = inp.value;
       td.title = inp.value;
-      salvarMercadoriasNF();
+      salvarMercadoriasNFItem(dadosMercadoriasNF[idx]);
     };
   }
   td.appendChild(inp);
@@ -154,7 +184,7 @@ function criarCelSelectEmpresaNF(value, idx) {
   sel.onchange = () => {
     dadosMercadoriasNF[idx].empresa = sel.value;
     td.title = sel.value;
-    salvarMercadoriasNF();
+    salvarMercadoriasNFItem(dadosMercadoriasNF[idx]);
   };
   td.appendChild(sel);
   return td;
@@ -163,7 +193,7 @@ function criarCelSelectEmpresaNF(value, idx) {
 function criarCelSelectLojaNF(value, idx) {
   return criarCelSelectLoja(value, (val) => {
     dadosMercadoriasNF[idx].loja = val;
-    salvarMercadoriasNF();
+    salvarMercadoriasNFItem(dadosMercadoriasNF[idx]);
   });
 }
 
@@ -185,7 +215,7 @@ function criarCelSelectTurnoNF(value, idx) {
   sel.onchange = () => {
     dadosMercadoriasNF[idx].turno = sel.value;
     td.title = sel.value;
-    salvarMercadoriasNF();
+    salvarMercadoriasNFItem(dadosMercadoriasNF[idx]);
   };
   td.appendChild(sel);
   return td;
@@ -209,7 +239,7 @@ function criarCelSelectTipoVolNF(value, idx) {
   sel.onchange = () => {
     dadosMercadoriasNF[idx].tipoVolume = sel.value;
     td.title = sel.value;
-    salvarMercadoriasNF();
+    salvarMercadoriasNFItem(dadosMercadoriasNF[idx]);
   };
   td.appendChild(sel);
   return td;
@@ -222,7 +252,7 @@ function adicionarMercadoriaNF() {
     loja: '', volume: '', tipoVolume: '', qtdPlu: '', conferente: '', turno: ''
   });
   garantirIds(dadosMercadoriasNF);
-  salvarMercadoriasNF();
+  salvarMercadoriasNFItem(dadosMercadoriasNF[dadosMercadoriasNF.length - 1]);
   renderizarMercadoriasNF();
   toast('Registro adicionado', 'success');
 }

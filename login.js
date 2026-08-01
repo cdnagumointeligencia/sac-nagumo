@@ -1058,45 +1058,6 @@ function baixarArquivo(conteudo, nome, tipo) {
   document.body.removeChild(link);
 }
 
-function _contarLocalChamados() {
-  var total = 0;
-  var cds = ['CD1', 'CD2'];
-  for (var c = 0; c < cds.length; c++) {
-    var cd = cds[c];
-    var chaves = ['SAC_SAC_' + cd + '_dados', 'SAC_' + cd + '_dados', 'SAC_' + cd + '_SAC_dados'];
-    for (var k = 0; k < chaves.length; k++) {
-      try {
-        var raw = localStorage.getItem(chaves[k]);
-        if (raw) {
-          var arr = JSON.parse(raw);
-          for (var i = 0; i < arr.length; i++) {
-            var d = arr[i];
-            if (Array.isArray(d.registros)) total += d.registros.length;
-            else if (d.registros && typeof d.registros === 'object') total += Object.keys(d.registros).length;
-          }
-          break;
-        }
-      } catch (e) {}
-    }
-  }
-  return total;
-}
-
-function _contarLocalColecao(sufixo) {
-  var cds = ['CD1', 'CD2'];
-  for (var c = 0; c < cds.length; c++) {
-    var cd = cds[c];
-    var chaves = ['SAC_' + cd + '_' + sufixo, 'SAC_SAC_' + cd + '_' + sufixo];
-    for (var k = 0; k < chaves.length; k++) {
-      try {
-        var raw = localStorage.getItem(chaves[k]);
-        if (raw) return JSON.parse(raw).length || 0;
-      } catch (e) {}
-    }
-  }
-  return 0;
-}
-
 function contarRegistrosBackup(backup) {
   var total = 0;
   var qtdChamados = 0;
