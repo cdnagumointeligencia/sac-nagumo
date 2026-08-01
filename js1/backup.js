@@ -32,9 +32,9 @@ function contarRegistrosAtuais(cdFiltro) {
 
   if (!cdFiltro) {
     for (var i = 0; i < cds.length; i++) {
-      total += _contarLocalColecao('SENHAS_SAC_dados', cdAtual);
-      total += _contarLocalColecao('NOTAS_DEV_dados', cdAtual);
-      total += _contarLocalColecao('MERCADORIAS_NF_dados', cdAtual);
+      total += _contarLocalColecao('SENHAS_SAC_dados', cds[i]);
+      total += _contarLocalColecao('NOTAS_DEV_dados', cds[i]);
+      total += _contarLocalColecao('MERCADORIAS_NF_dados', cds[i]);
     }
   }
 
@@ -65,10 +65,24 @@ async function exportarBackupCompleto() {
   }
 
   if (dadosCD.length === 0) {
-    try {
-      const raw = localStorage.getItem('SAC_' + cdAtual + '_dados');
-      if (raw) dadosCD = JSON.parse(raw);
-    } catch {}
+    const dadosPorMes = {};
+    ['CD1', 'CD2'].forEach(cd => {
+      try {
+        const raw = localStorage.getItem('SAC_' + cd + '_dados');
+        if (raw) {
+          const itens = JSON.parse(raw);
+          for (let i = 0; i < itens.length; i++) {
+            const item = itens[i];
+            if (!item || !item.mes) continue;
+            if (!dadosPorMes[item.mes]) dadosPorMes[item.mes] = [];
+            dadosPorMes[item.mes] = dadosPorMes[item.mes].concat(item.registros || []);
+          }
+        }
+      } catch {}
+    });
+    Object.keys(dadosPorMes).forEach(mes => {
+      dadosCD.push({ mes, registros: dadosPorMes[mes] });
+    });
   }
   if (dadosCD.length === 0) {
     Object.keys(dadosMes).forEach(mes => {
@@ -81,13 +95,19 @@ async function exportarBackupCompleto() {
   }
 
   if (senhasSac.length === 0) {
-    try { senhasSac = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_SENHAS_SAC_dados')) || []; } catch {}
+    ['CD1', 'CD2'].forEach(cd => {
+      try { senhasSac = senhasSac.concat(JSON.parse(localStorage.getItem('SAC_' + cd + '_SENHAS_SAC_dados')) || []); } catch {}
+    });
   }
   if (notasDevolucao.length === 0) {
-    try { notasDevolucao = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_NOTAS_DEV_dados')) || []; } catch {}
+    ['CD1', 'CD2'].forEach(cd => {
+      try { notasDevolucao = notasDevolucao.concat(JSON.parse(localStorage.getItem('SAC_' + cd + '_NOTAS_DEV_dados')) || []); } catch {}
+    });
   }
   if (mercadoriasNF.length === 0) {
-    try { mercadoriasNF = JSON.parse(localStorage.getItem('SAC_' + cdAtual + '_MERCADORIAS_NF_dados')) || []; } catch {}
+    ['CD1', 'CD2'].forEach(cd => {
+      try { mercadoriasNF = mercadoriasNF.concat(JSON.parse(localStorage.getItem('SAC_' + cd + '_MERCADORIAS_NF_dados')) || []); } catch {}
+    });
   }
 
   let bracos = {};

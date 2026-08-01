@@ -1116,29 +1116,40 @@ async function exportarBackupCompleto() {
   }
 
   if (dadosCD.length === 0) {
-    try { var raw = localStorage.getItem('SAC_CD1_dados'); if (raw) dadosCD = JSON.parse(raw); } catch {}
-  }
-  if (dadosCD.length === 0) {
-    try { var raw = localStorage.getItem('SAC_CD2_dados'); if (raw) dadosCD = dadosCD.concat(JSON.parse(raw)); } catch {}
+    var dadosPorMesLogin = {};
+    ['CD1', 'CD2'].forEach(function (cd) {
+      try {
+        var raw = localStorage.getItem('SAC_' + cd + '_dados');
+        if (raw) {
+          var itens = JSON.parse(raw);
+          for (var i = 0; i < itens.length; i++) {
+            var item = itens[i];
+            if (!item || !item.mes) continue;
+            if (!dadosPorMesLogin[item.mes]) dadosPorMesLogin[item.mes] = [];
+            dadosPorMesLogin[item.mes] = dadosPorMesLogin[item.mes].concat(item.registros || []);
+          }
+        }
+      } catch {}
+    });
+    Object.keys(dadosPorMesLogin).forEach(function (mes) {
+      dadosCD.push({ mes: mes, registros: dadosPorMesLogin[mes] });
+    });
   }
 
   if (senhasSac.length === 0) {
-    try { senhasSac = JSON.parse(localStorage.getItem('SAC_CD1_SENHAS_SAC_dados')) || []; } catch {}
-    if (senhasSac.length === 0) {
-      try { senhasSac = JSON.parse(localStorage.getItem('SAC_CD2_SENHAS_SAC_dados')) || []; } catch {}
-    }
+    ['CD1', 'CD2'].forEach(function (cd) {
+      try { senhasSac = senhasSac.concat(JSON.parse(localStorage.getItem('SAC_' + cd + '_SENHAS_SAC_dados')) || []); } catch {}
+    });
   }
   if (notasDevolucao.length === 0) {
-    try { notasDevolucao = JSON.parse(localStorage.getItem('SAC_CD1_NOTAS_DEV_dados')) || []; } catch {}
-    if (notasDevolucao.length === 0) {
-      try { notasDevolucao = JSON.parse(localStorage.getItem('SAC_CD2_NOTAS_DEV_dados')) || []; } catch {}
-    }
+    ['CD1', 'CD2'].forEach(function (cd) {
+      try { notasDevolucao = notasDevolucao.concat(JSON.parse(localStorage.getItem('SAC_' + cd + '_NOTAS_DEV_dados')) || []); } catch {}
+    });
   }
   if (mercadoriasNF.length === 0) {
-    try { mercadoriasNF = JSON.parse(localStorage.getItem('SAC_CD1_MERCADORIAS_NF_dados')) || []; } catch {}
-    if (mercadoriasNF.length === 0) {
-      try { mercadoriasNF = JSON.parse(localStorage.getItem('SAC_CD2_MERCADORIAS_NF_dados')) || []; } catch {}
-    }
+    ['CD1', 'CD2'].forEach(function (cd) {
+      try { mercadoriasNF = mercadoriasNF.concat(JSON.parse(localStorage.getItem('SAC_' + cd + '_MERCADORIAS_NF_dados')) || []); } catch {}
+    });
   }
 
   var bracos = {};
