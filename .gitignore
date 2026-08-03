@@ -26,3 +26,6 @@ regras do negócio.md
 
 # Link do site online (local, nao vai para o GitHub)
 link.txt
+
+# Backups locais (nao vao para o GitHub)
+backup_*/
