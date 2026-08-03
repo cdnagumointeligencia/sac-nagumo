@@ -157,7 +157,6 @@
       background: var(--card); backdrop-filter: blur(10px); border-radius: var(--radius); overflow: auto;
       box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 14px;
       -webkit-overflow-scrolling: touch;
-      max-height: calc(100vh - 220px);
     }
     table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 600px; }
     th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); font-size: 0.78rem; }
