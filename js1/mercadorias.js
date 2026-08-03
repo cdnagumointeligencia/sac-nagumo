@@ -8,15 +8,11 @@ var _fbTimerMerc = null;
 var _pendentesMercItem = {};
 
 async function carregarMercadoriasNF() {
-  var fbOk = await fbCarregarColecao('mercadoriasNF', dadosMercadoriasNF);
-  if (!fbOk) {
-    dadosMercadoriasNF = lsGetCd('MERCADORIAS_NF_dados') || [];
-  }
+  dadosMercadoriasNF = lsGetCd('MERCADORIAS_NF_dados') || [];
   garantirIds(dadosMercadoriasNF);
-  if (fbDisponivel() && cdAtual) {
-    if (_snapMerc) { try { _snapMerc(); } catch (e) {} }
-    _snapMerc = fbOnSnapshotColecao('mercadoriasNF', dadosMercadoriasNF);
-  }
+  if (!fbDisponivel() || !cdAtual) return;
+  if (_snapMerc) { try { _snapMerc(); } catch (e) {} }
+  _snapMerc = fbOnSnapshotColecao('mercadoriasNF', dadosMercadoriasNF);
 }
 
 function flushMercadoriasItens() {

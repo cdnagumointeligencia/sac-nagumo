@@ -5,15 +5,11 @@ var _fbTimerSenhas = null;
 var _pendentesSenhaItem = {};
 
 async function carregarSenhasSac() {
-  var fbOk = await fbCarregarColecao('senhasSac', dadosSenhasSac);
-  if (!fbOk) {
-    dadosSenhasSac = (lsGetCd('SENHAS_SAC_dados') || []).slice();
-  }
+  dadosSenhasSac = (lsGetCd('SENHAS_SAC_dados') || []).slice();
   garantirIds(dadosSenhasSac);
-  if (fbDisponivel() && cdAtual) {
-    if (_snapSenhas) { try { _snapSenhas(); } catch (e) {} }
-    _snapSenhas = fbOnSnapshotColecao('senhasSac', dadosSenhasSac);
-  }
+  if (!fbDisponivel() || !cdAtual) return;
+  if (_snapSenhas) { try { _snapSenhas(); } catch (e) {} }
+  _snapSenhas = fbOnSnapshotColecao('senhasSac', dadosSenhasSac);
 }
 
 function flushSenhaSacItens() {

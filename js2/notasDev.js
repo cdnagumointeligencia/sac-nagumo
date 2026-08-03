@@ -5,15 +5,11 @@ var _fbTimerNotas = null;
 var _pendentesNotasItem = {};
 
 async function carregarNotasDev() {
-  var fbOk = await fbCarregarColecao('notasDevolucao', dadosNotasDev);
-  if (!fbOk) {
-    dadosNotasDev = lsGetCd('NOTAS_DEV_dados') || [];
-  }
+  dadosNotasDev = lsGetCd('NOTAS_DEV_dados') || [];
   garantirIds(dadosNotasDev);
-  if (fbDisponivel() && cdAtual) {
-    if (_snapNotas) { try { _snapNotas(); } catch (e) {} }
-    _snapNotas = fbOnSnapshotColecao('notasDevolucao', dadosNotasDev);
-  }
+  if (!fbDisponivel() || !cdAtual) return;
+  if (_snapNotas) { try { _snapNotas(); } catch (e) {} }
+  _snapNotas = fbOnSnapshotColecao('notasDevolucao', dadosNotasDev);
 }
 
 function flushNotasDevItens() {

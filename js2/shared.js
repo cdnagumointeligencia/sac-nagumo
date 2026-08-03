@@ -447,23 +447,33 @@ async function salvarDadosMes() {
 // ==================== SNAPSHOTS ====================
 function configurarSnapshots() {
   fbOnSnapshotConfig('config', 'bracos', function (data) {
-    if (data && data.dados) bracosConfig = data.dados;
+    if (data && data.dados && Object.keys(data.dados).length > 0) {
+      bracosConfig = data.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'bracos', { dados: bracosConfig });
+    }
   });
   fbOnSnapshotConfig('config', 'lojas', function (data) {
-    if (data && Array.isArray(data.dados)) lojasMercadorias = data.dados;
+    if (data && Array.isArray(data.dados) && data.dados.length > 0) {
+      lojasMercadorias = data.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'lojas', { dados: lojasMercadorias });
+    }
   });
   fbOnSnapshotConfig('config', 'observacoes', function (data) {
-    if (data && data.dados) observacoesCustom = data.dados;
+    if (data && typeof data.dados === 'object' && data.dados !== null) {
+      observacoesCustom = data.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
+    }
   });
   fbOnSnapshotConfig('config', 'divergencias', function (data) {
-    if (data && data.dados) divergenciasCustom = data.dados;
-  });
-  fbOnSnapshot('usuarios', [], function (results) {
-    if (results && results.length > 0) {
-      todosUsuarios = results;
-      usuarios = todosUsuarios.filter(function (u) { return u.ativo; }).map(function (u) { return u.nome; });
+    if (data && typeof data.dados === 'object' && data.dados !== null) {
+      divergenciasCustom = data.dados;
+    } else if (fbDisponivel()) {
+      fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
     }
-  }, function () {});
+  });
 }
 
 // ==================== FILTROS ====================
@@ -557,13 +567,6 @@ function carregarBracosConfig() {
     bracosConfig = {};
     Object.entries(BRACOS_DEFAULT).forEach(([nome, lojas]) => { bracosConfig[nome] = lojas; });
   }
-  fbCarregarConfig('config', 'bracos').then(function (fbData) {
-    if (fbData && fbData.dados && Object.keys(fbData.dados).length > 0) {
-      bracosConfig = fbData.dados;
-    } else if (fbDisponivel()) {
-      fbSalvarConfig('config', 'bracos', { dados: bracosConfig });
-    }
-  });
 }
 
 function salvarBracosConfigLocalStorage() {
@@ -698,13 +701,6 @@ function carregarLojas() {
   if (!lojasMercadorias || lojasMercadorias.length === 0) {
     lojasMercadorias = [...LOJAS_MERCADORIAS_DEFAULT];
   }
-  fbCarregarConfig('config', 'lojas').then(function (fbData) {
-    if (fbData && Array.isArray(fbData.dados) && fbData.dados.length > 0) {
-      lojasMercadorias = fbData.dados;
-    } else if (fbDisponivel()) {
-      fbSalvarConfig('config', 'lojas', { dados: lojasMercadorias });
-    }
-  });
 }
 
 function salvarLojas() {
@@ -807,13 +803,6 @@ function carregarObservacoes() {
   if (!observacoesCustom || Object.keys(observacoesCustom).length === 0) {
     observacoesCustom = {};
   }
-  fbCarregarConfig('config', 'observacoes').then(function (fbData) {
-    if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
-      observacoesCustom = fbData.dados;
-    } else if (fbDisponivel()) {
-      fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
-    }
-  });
 }
 
 function salvarObservacoes() {
@@ -938,13 +927,6 @@ function carregarDivergencias() {
   if (!divergenciasCustom || Object.keys(divergenciasCustom).length === 0) {
     divergenciasCustom = {};
   }
-  fbCarregarConfig('config', 'divergencias').then(function (fbData) {
-    if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
-      divergenciasCustom = fbData.dados;
-    } else if (fbDisponivel()) {
-      fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
-    }
-  });
 }
 
 function salvarDivergencias() {

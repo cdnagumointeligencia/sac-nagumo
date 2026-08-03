@@ -234,6 +234,8 @@ async function fbExcluirChamado(id) {
 
 async function fbLimparChamadosLegado() {
   if (!fbDisponivel() || !cdAtual) return;
+  var flag = 'legadoLimpo_' + cdAtual;
+  if (lsGet(flag)) return;
   var ano = new Date().getFullYear();
   var resultados = await fbQuery('chamados', [
     ['cd', '==', cdAtual],
@@ -252,6 +254,7 @@ async function fbLimparChamadosLegado() {
     }
   }
   await Promise.all(promises);
+  lsSet(flag, true);
 }
 
 // ==================== COLEÇÕES GENÉRICAS: onSnapshot + Write ====================
@@ -264,6 +267,8 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
   var ano = new Date().getFullYear();
   var conditions = [['cd', '==', cdAtual], ['ano', '==', ano], ['ativo', '==', true]];
   if (extraConditions) conditions = conditions.concat(extraConditions);
+
+  var primeiraEntrega = true;
 
   return fbOnSnapshot(colecao, conditions, function (resultados) {
     var excluidos = idsColecaoExcluidos();
@@ -284,6 +289,21 @@ function fbOnSnapshotColecao(colecao, alvo, extraConditions) {
     });
 
     var mudou = false;
+
+    if (primeiraEntrega) {
+      primeiraEntrega = false;
+      for (var p = 0; p < alvo.length; p++) {
+        var dp = alvo[p];
+        if (!dp) continue;
+        var dpId = dp.id || dp.firestoreId;
+        if (dpId && !porId[dpId]) {
+          alvo.splice(p, 1);
+          p--;
+          mudou = true;
+        }
+      }
+    }
+
     for (var i = 0; i < alvo.length; i++) {
       var d = alvo[i];
       if (!d) continue;

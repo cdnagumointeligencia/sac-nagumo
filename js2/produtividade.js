@@ -5,18 +5,14 @@ var _fbTimerProd = null;
 var _pendentesProdItem = {};
 
 async function carregarProdutividade() {
-  var fbOk = await fbCarregarColecao('produtividade', dadosProdutividade);
-  if (!fbOk) {
-    dadosProdutividade = (lsGetCd('PRODUTIVIDADE_dados') || []).slice();
-  }
+  dadosProdutividade = (lsGetCd('PRODUTIVIDADE_dados') || []).slice();
   dadosProdutividade = (dadosProdutividade || []).filter(function (r) {
     return r && Number(r.mes) >= 1 && Number(r.mes) <= 12;
   });
   garantirIds(dadosProdutividade);
-  if (fbDisponivel() && cdAtual) {
-    if (_snapProd) { try { _snapProd(); } catch (e) {} }
-    _snapProd = fbOnSnapshotColecao('produtividade', dadosProdutividade);
-  }
+  if (!fbDisponivel() || !cdAtual) return;
+  if (_snapProd) { try { _snapProd(); } catch (e) {} }
+  _snapProd = fbOnSnapshotColecao('produtividade', dadosProdutividade);
 }
 
 function flushProdutividadeItens() {

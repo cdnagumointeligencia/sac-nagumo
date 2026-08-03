@@ -429,7 +429,9 @@ function fbOnSnapshotConfig(colecao, docId, callback) {
   if (_fbSnapConfigs[chave]) return;
   _fbSnapConfigs[chave] = fbDb.collection(colecao).doc(docId).onSnapshot(function (doc) {
     if (doc.exists) {
-      callback(doc.data());
+      callback(doc.data(), true);
+    } else {
+      callback(null, false);
     }
   }, function () {});
 }
