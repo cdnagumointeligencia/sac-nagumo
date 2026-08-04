@@ -725,11 +725,12 @@ function adicionarObservacao() {
     toast('Opção já existe', 'error');
     return;
   }
-  var key = 'CD1';
-  if (!observacoesCustomLogin[key]) {
-    observacoesCustomLogin[key] = OBSERVACOES_CD1.slice();
-  }
-  observacoesCustomLogin[key].push(val);
+  ['CD1', 'CD2'].forEach(function (key) {
+    if (!observacoesCustomLogin[key]) {
+      observacoesCustomLogin[key] = key === 'CD1' ? OBSERVACOES_CD1.slice() : OBSERVACOES_CD2.slice();
+    }
+    observacoesCustomLogin[key].push(val);
+  });
   salvarObservacoesLogin();
   input.value = '';
   renderizarListaObservacoes();
@@ -743,18 +744,19 @@ function editarObservacao(idx) {
     toast('Digite o texto da opção', 'error');
     return;
   }
-  var key = 'CD1';
-  if (!observacoesCustomLogin[key]) {
-    observacoesCustomLogin[key] = OBSERVACOES_CD1.slice();
-  }
-  var arr = observacoesCustomLogin[key];
-  var antigo = arr[idx];
-  if (antigo.toUpperCase() === novoVal.toUpperCase()) return;
-  if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
-    toast('Opção já existe', 'error');
-    return;
-  }
-  arr[idx] = novoVal;
+  ['CD1', 'CD2'].forEach(function (key) {
+    if (!observacoesCustomLogin[key]) {
+      observacoesCustomLogin[key] = key === 'CD1' ? OBSERVACOES_CD1.slice() : OBSERVACOES_CD2.slice();
+    }
+    var arr = observacoesCustomLogin[key];
+    var antigo = arr[idx];
+    if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
+    if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
+      toast('Opção já existe', 'error');
+      return;
+    }
+    arr[idx] = novoVal;
+  });
   salvarObservacoesLogin();
   renderizarListaObservacoes();
   toast('Opção atualizada', 'success');
@@ -765,11 +767,12 @@ function excluirObservacao(idx) {
   var item = arr[idx];
   if (!item) return;
   if (!confirm('Excluir "' + item + '"?')) return;
-  var key = 'CD1';
-  if (!observacoesCustomLogin[key]) {
-    observacoesCustomLogin[key] = OBSERVACOES_CD1.slice();
-  }
-  observacoesCustomLogin[key].splice(idx, 1);
+  ['CD1', 'CD2'].forEach(function (key) {
+    if (!observacoesCustomLogin[key]) {
+      observacoesCustomLogin[key] = key === 'CD1' ? OBSERVACOES_CD1.slice() : OBSERVACOES_CD2.slice();
+    }
+    observacoesCustomLogin[key].splice(idx, 1);
+  });
   salvarObservacoesLogin();
   renderizarListaObservacoes();
   toast(item + ' excluída', 'success');
@@ -852,11 +855,12 @@ function adicionarDivergencia() {
     toast('Opção já existe', 'error');
     return;
   }
-  var key = 'CD1';
-  if (!divergenciasCustomLogin[key]) {
-    divergenciasCustomLogin[key] = DIVERGENCIAS_CD1.slice();
-  }
-  divergenciasCustomLogin[key].push(val);
+  ['CD1', 'CD2'].forEach(function (key) {
+    if (!divergenciasCustomLogin[key]) {
+      divergenciasCustomLogin[key] = key === 'CD1' ? DIVERGENCIAS_CD1.slice() : DIVERGENCIAS_CD2.slice();
+    }
+    divergenciasCustomLogin[key].push(val);
+  });
   salvarDivergenciasLogin();
   input.value = '';
   renderizarListaDivergencias();
@@ -870,18 +874,19 @@ function editarDivergencia(idx) {
     toast('Digite o texto da opção', 'error');
     return;
   }
-  var key = 'CD1';
-  if (!divergenciasCustomLogin[key]) {
-    divergenciasCustomLogin[key] = DIVERGENCIAS_CD1.slice();
-  }
-  var arr = divergenciasCustomLogin[key];
-  var antigo = arr[idx];
-  if (antigo.toUpperCase() === novoVal.toUpperCase()) return;
-  if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
-    toast('Opção já existe', 'error');
-    return;
-  }
-  arr[idx] = novoVal;
+  ['CD1', 'CD2'].forEach(function (key) {
+    if (!divergenciasCustomLogin[key]) {
+      divergenciasCustomLogin[key] = key === 'CD1' ? DIVERGENCIAS_CD1.slice() : DIVERGENCIAS_CD2.slice();
+    }
+    var arr = divergenciasCustomLogin[key];
+    var antigo = arr[idx];
+    if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
+    if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
+      toast('Opção já existe', 'error');
+      return;
+    }
+    arr[idx] = novoVal;
+  });
   salvarDivergenciasLogin();
   renderizarListaDivergencias();
   toast('Opção atualizada', 'success');
@@ -892,11 +897,12 @@ function excluirDivergencia(idx) {
   var item = arr[idx];
   if (!item) return;
   if (!confirm('Excluir "' + item + '"?')) return;
-  var key = 'CD1';
-  if (!divergenciasCustomLogin[key]) {
-    divergenciasCustomLogin[key] = DIVERGENCIAS_CD1.slice();
-  }
-  divergenciasCustomLogin[key].splice(idx, 1);
+  ['CD1', 'CD2'].forEach(function (key) {
+    if (!divergenciasCustomLogin[key]) {
+      divergenciasCustomLogin[key] = key === 'CD1' ? DIVERGENCIAS_CD1.slice() : DIVERGENCIAS_CD2.slice();
+    }
+    divergenciasCustomLogin[key].splice(idx, 1);
+  });
   salvarDivergenciasLogin();
   renderizarListaDivergencias();
   toast(item + ' excluída', 'success');
