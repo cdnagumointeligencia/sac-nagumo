@@ -462,6 +462,17 @@ function configurarSnapshots() {
   });
   fbOnSnapshotConfig('config', 'observacoes', function (data) {
     if (data && typeof data.dados === 'object' && data.dados !== null) {
+      ['CD1', 'CD2'].forEach(function (key) {
+        var fbArr = data.dados[key];
+        var localArr = observacoesCustom[key];
+        if (Array.isArray(fbArr) && fbArr.length > 0) {
+          if (Array.isArray(localArr) && localArr.length > fbArr.length) {
+            data.dados[key] = localArr;
+          }
+        } else if (Array.isArray(localArr) && localArr.length > 0) {
+          data.dados[key] = localArr;
+        }
+      });
       observacoesCustom = data.dados;
     } else if (fbDisponivel()) {
       fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
@@ -469,6 +480,17 @@ function configurarSnapshots() {
   });
   fbOnSnapshotConfig('config', 'divergencias', function (data) {
     if (data && typeof data.dados === 'object' && data.dados !== null) {
+      ['CD1', 'CD2'].forEach(function (key) {
+        var fbArr = data.dados[key];
+        var localArr = divergenciasCustom[key];
+        if (Array.isArray(fbArr) && fbArr.length > 0) {
+          if (Array.isArray(localArr) && localArr.length > fbArr.length) {
+            data.dados[key] = localArr;
+          }
+        } else if (Array.isArray(localArr) && localArr.length > 0) {
+          data.dados[key] = localArr;
+        }
+      });
       divergenciasCustom = data.dados;
     } else if (fbDisponivel()) {
       fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
