@@ -5,7 +5,7 @@ const ADMIN_USER = 'admin';
 const ADMIN_SENHA = 'admin123';
 
 const SETORES_CD1 = ['', 'FLV', 'Perecíveis', 'Indevido'];
-const SETORES_CD2 = ['', 'Expedição', 'Indevido', 'Loja Piloto', 'PCO', 'Recebimento', 'Separação', 'Sorter', 'Transporte'];
+const SETORES_CD2 = ['', 'Expedição', 'Indevido', 'Jogada', 'Loja Piloto', 'PCO', 'Recebimento', 'Separação', 'Sorter', 'Transporte'];
 function getSetores() { return SETORES_CD2; }
 const TURNOS = ['', 'Manhã', 'Tarde', 'Noite'];
 const DIVERGENCIAS_CD1 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja'];
