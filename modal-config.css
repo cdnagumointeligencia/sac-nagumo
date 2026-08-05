@@ -1,0 +1,72 @@
+/* ===== MODAL CONFIGURAÇÕES ===== */
+#modalConfig .modal-box {
+  width: 92%;
+  max-width: 780px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+#modalConfig .modal-box h3 {
+  margin-bottom: 14px;
+}
+.config-lock-hint {
+  font-size: 0.75rem; color: #9ca3af; text-align: center;
+  margin: 0 0 14px;
+}
+
+.config-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-top: 4px;
+}
+.config-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 12px; border: 2px solid var(--border); border-radius: 12px;
+  background: #f9fafb; cursor: pointer; transition: all 0.2s;
+  text-decoration: none; color: var(--text);
+}
+.config-card:hover {
+  border-color: var(--primary); background: #f0f7ff;
+  transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.config-card .config-icon {
+  font-size: 1.5rem; line-height: 1;
+}
+.config-card .config-label {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; text-align: center;
+}
+.config-card .config-desc {
+  font-size: 0.62rem; color: #9ca3af; text-align: center; line-height: 1.3;
+}
+
+/* ===== MODAIS DE CONFIGURAÇÃO (só a lista interna rola) ===== */
+#modalObservacoes .modal-box,
+#modalDivergencias .modal-box,
+#modalSenhasSAC .modal-box,
+#modalUsuarios .modal-box,
+#modalBackup .modal-box,
+#modalLojas .modal-box,
+#modalBracos .modal-box {
+  max-height: 92vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#modalObservacoes #listaObservacoes,
+#modalDivergencias #listaDivergencias,
+#modalSenhasSAC #listaSenhasSAC,
+#modalUsuarios #listaUsuarios,
+#modalLojas #listaLojas,
+#modalBracos #listaBracos {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* esconde a barra de rolagem da página enquanto um modal está aberto */
+body:has(.modal.show) {
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .config-grid { grid-template-columns: 1fr; }
+  .config-card { padding: 12px 10px; }
+}

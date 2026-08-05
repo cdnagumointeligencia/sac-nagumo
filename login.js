@@ -74,6 +74,13 @@ function mesclarListasPadrao(lista1, lista2) {
   return out;
 }
 
+function ordenarListaConfig(arr) {
+  if (!Array.isArray(arr)) return arr;
+  return arr.sort(function (a, b) {
+    return String(a).localeCompare(String(b), 'pt-BR');
+  });
+}
+
 // ==================== LOCALSTORAGE HELPERS ====================
 function lsGetShared(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
@@ -118,15 +125,9 @@ function navegarCD(cd) {
 }
 
 // ==================== ABRIR MODAIS ESPECÍFICOS ====================
-function abrirModalConfig() { abrirModal('modalConfig'); }
 function abrirModalUsuarios() {
-  document.getElementById('senhaArea').style.display = 'block';
-  document.getElementById('gestaoArea').style.display = 'none';
-  document.getElementById('tituloModalUser').textContent = 'Acesso Restrito';
-  document.getElementById('inputSenha').value = '';
-  document.getElementById('senhaErro').style.display = 'none';
+  renderizarListaUsuarios();
   abrirModal('modalUsuarios');
-  setTimeout(function () { var inp = document.getElementById('inputSenha'); if (inp) inp.focus(); }, 100);
 }
 function abrirModalBackup() { abrirModal('modalBackup'); }
 function abrirModalLojas() { renderizarListaLojas(); abrirModal('modalLojas'); }
@@ -307,23 +308,6 @@ function renderizarListaUsuarios() {
         resetarSenhaUsuario(nome);
       }
     });
-  });
-}
-
-function validarSenha() {
-  var hashInput = hashSenha(document.getElementById('inputSenha').value);
-  var hashAdmin = hashSenha(ADMIN_SENHA);
-  Promise.all([hashInput, hashAdmin]).then(function (results) {
-    if (results[0] === results[1]) {
-      document.getElementById('senhaArea').style.display = 'none';
-      document.getElementById('gestaoArea').style.display = 'block';
-      document.getElementById('tituloModalUser').textContent = 'Gerenciar Usuários';
-      renderizarListaUsuarios();
-    } else {
-      document.getElementById('senhaErro').style.display = 'block';
-      document.getElementById('inputSenha').value = '';
-      document.getElementById('inputSenha').focus();
-    }
   });
 }
 
@@ -631,12 +615,12 @@ async function carregarObservacoesLogin() {
   try {
     var fbData = await fbCarregarConfig('config', 'observacoes');
     if (fbData && fbData.dados !== undefined && fbData.dados !== null) {
-      observacoesCustomLogin = normalizarListaConfig(fbData.dados);
+      observacoesCustomLogin = ordenarListaConfig(normalizarListaConfig(fbData.dados));
       if (!Array.isArray(fbData.dados)) {
         await fbSalvarConfig('config', 'observacoes', { dados: observacoesCustomLogin });
       }
     } else {
-      observacoesCustomLogin = mesclarListasPadrao(OBSERVACOES_CD1, OBSERVACOES_CD2);
+      observacoesCustomLogin = ordenarListaConfig(mesclarListasPadrao(OBSERVACOES_CD1, OBSERVACOES_CD2));
       await fbSalvarConfig('config', 'observacoes', { dados: observacoesCustomLogin });
     }
   } catch (e) {}
@@ -670,8 +654,10 @@ function renderizarListaObservacoes() {
 }
 
 function obterObsArrayLogin() {
-  if (Array.isArray(observacoesCustomLogin) && observacoesCustomLogin.length > 0) return observacoesCustomLogin;
-  return OBSERVACOES_CD1;
+  if (Array.isArray(observacoesCustomLogin) && observacoesCustomLogin.length > 0) {
+    return ordenarListaConfig(observacoesCustomLogin);
+  }
+  return ordenarListaConfig(OBSERVACOES_CD1.slice());
 }
 
 function adicionarObservacao() {
@@ -688,6 +674,7 @@ function adicionarObservacao() {
   }
   if (!Array.isArray(observacoesCustomLogin)) observacoesCustomLogin = arr.slice();
   observacoesCustomLogin.push(val);
+  ordenarListaConfig(observacoesCustomLogin);
   salvarObservacoesLogin();
   input.value = '';
   renderizarListaObservacoes();
@@ -710,6 +697,7 @@ function editarObservacao(idx) {
   }
   if (!Array.isArray(observacoesCustomLogin)) observacoesCustomLogin = arr.slice();
   observacoesCustomLogin[idx] = novoVal;
+  ordenarListaConfig(observacoesCustomLogin);
   salvarObservacoesLogin();
   renderizarListaObservacoes();
   toast('Opção atualizada', 'success');
@@ -734,12 +722,12 @@ async function carregarDivergenciasLogin() {
   try {
     var fbData = await fbCarregarConfig('config', 'divergencias');
     if (fbData && fbData.dados !== undefined && fbData.dados !== null) {
-      divergenciasCustomLogin = normalizarListaConfig(fbData.dados);
+      divergenciasCustomLogin = ordenarListaConfig(normalizarListaConfig(fbData.dados));
       if (!Array.isArray(fbData.dados)) {
         await fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustomLogin });
       }
     } else {
-      divergenciasCustomLogin = mesclarListasPadrao(DIVERGENCIAS_CD1, DIVERGENCIAS_CD2);
+      divergenciasCustomLogin = ordenarListaConfig(mesclarListasPadrao(DIVERGENCIAS_CD1, DIVERGENCIAS_CD2));
       await fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustomLogin });
     }
   } catch (e) {}
@@ -773,8 +761,10 @@ function renderizarListaDivergencias() {
 }
 
 function obterDivArrayLogin() {
-  if (Array.isArray(divergenciasCustomLogin) && divergenciasCustomLogin.length > 0) return divergenciasCustomLogin;
-  return DIVERGENCIAS_CD1;
+  if (Array.isArray(divergenciasCustomLogin) && divergenciasCustomLogin.length > 0) {
+    return ordenarListaConfig(divergenciasCustomLogin);
+  }
+  return ordenarListaConfig(DIVERGENCIAS_CD1.slice());
 }
 
 function adicionarDivergencia() {
@@ -791,6 +781,7 @@ function adicionarDivergencia() {
   }
   if (!Array.isArray(divergenciasCustomLogin)) divergenciasCustomLogin = arr.slice();
   divergenciasCustomLogin.push(val);
+  ordenarListaConfig(divergenciasCustomLogin);
   salvarDivergenciasLogin();
   input.value = '';
   renderizarListaDivergencias();
@@ -813,6 +804,7 @@ function editarDivergencia(idx) {
   }
   if (!Array.isArray(divergenciasCustomLogin)) divergenciasCustomLogin = arr.slice();
   divergenciasCustomLogin[idx] = novoVal;
+  ordenarListaConfig(divergenciasCustomLogin);
   salvarDivergenciasLogin();
   renderizarListaDivergencias();
   toast('Opção atualizada', 'success');

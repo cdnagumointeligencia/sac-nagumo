@@ -452,6 +452,7 @@ function configurarSnapshots() {
     } else if (fbDisponivel()) {
       fbSalvarConfig('config', 'bracos', { dados: bracosConfig });
     }
+    try { renderizarTabela(); } catch (e) {}
   });
   fbOnSnapshotConfig('config', 'lojas', function (data) {
     if (data && Array.isArray(data.dados) && data.dados.length > 0) {
@@ -459,6 +460,7 @@ function configurarSnapshots() {
     } else if (fbDisponivel()) {
       fbSalvarConfig('config', 'lojas', { dados: lojasMercadorias });
     }
+    try { renderizarTabela(); } catch (e) {}
   });
   fbOnSnapshotConfig('config', 'observacoes', function (data) {
     if (data && data.dados !== undefined && data.dados !== null) {
@@ -466,6 +468,7 @@ function configurarSnapshots() {
       if (!Array.isArray(data.dados)) {
         fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
       }
+      try { renderizarTabela(); } catch (e) {}
     }
   });
   fbOnSnapshotConfig('config', 'divergencias', function (data) {
@@ -474,6 +477,7 @@ function configurarSnapshots() {
       if (!Array.isArray(data.dados)) {
         fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
       }
+      try { renderizarTabela(); } catch (e) {}
     }
   });
 }
@@ -555,7 +559,7 @@ function limparFiltros() {
 // ==================== BRAÇOS ====================
 let bracosConfig = {};
 
-function carregarBracosConfig() {
+async function carregarBracosConfig() {
   try {
     const raw = localStorage.getItem('SAC_brasConfig');
     if (raw) {
@@ -565,6 +569,15 @@ function carregarBracosConfig() {
       }
     }
   } catch {}
+  if (fbDisponivel()) {
+    try {
+      const fbData = await fbCarregarConfig('config', 'bracos');
+      if (fbData && fbData.dados && Object.keys(fbData.dados).length > 0) {
+        bracosConfig = fbData.dados;
+        try { localStorage.setItem('SAC_brasConfig', JSON.stringify(bracosConfig)); } catch {}
+      }
+    } catch {}
+  }
   if (!bracosConfig || Object.keys(bracosConfig).length === 0) {
     bracosConfig = {};
     Object.entries(BRACOS_DEFAULT).forEach(([nome, lojas]) => { bracosConfig[nome] = lojas; });
@@ -690,7 +703,7 @@ function normalizarLoja(nome) {
   return ('00' + m[1]).slice(-3) + '-' + m[2];
 }
 
-function carregarLojas() {
+async function carregarLojas() {
   try {
     const raw = localStorage.getItem('SAC_LOJAS_MERCADORIAS');
     if (raw) {
@@ -700,6 +713,15 @@ function carregarLojas() {
       }
     }
   } catch {}
+  if (fbDisponivel()) {
+    try {
+      const fbData = await fbCarregarConfig('config', 'lojas');
+      if (fbData && Array.isArray(fbData.dados) && fbData.dados.length > 0) {
+        lojasMercadorias = fbData.dados;
+        try { localStorage.setItem('SAC_LOJAS_MERCADORIAS', JSON.stringify(lojasMercadorias)); } catch {}
+      }
+    } catch {}
+  }
   if (!lojasMercadorias || lojasMercadorias.length === 0) {
     lojasMercadorias = [...LOJAS_MERCADORIAS_DEFAULT];
   }
@@ -809,13 +831,18 @@ function normalizarListaConfig(dados) {
 
 let observacoesCustom = [];
 
-function carregarObservacoes() {
+async function carregarObservacoes() {
   observacoesCustom = [];
   try {
     const raw = localStorage.getItem('SAC_OBSERVACOES_CUSTOM');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      observacoesCustom = normalizarListaConfig(parsed);
+    if (raw) observacoesCustom = normalizarListaConfig(JSON.parse(raw));
+  } catch {}
+  if (!fbDisponivel()) return;
+  try {
+    const fbData = await fbCarregarConfig('config', 'observacoes');
+    if (fbData && fbData.dados !== undefined && fbData.dados !== null) {
+      observacoesCustom = normalizarListaConfig(fbData.dados);
+      try { localStorage.setItem('SAC_OBSERVACOES_CUSTOM', JSON.stringify(observacoesCustom)); } catch {}
     }
   } catch {}
 }
@@ -918,13 +945,18 @@ function excluirObservacao(idx) {
 // ==================== GERENCIAR DIVERGÊNCIA ====================
 let divergenciasCustom = [];
 
-function carregarDivergencias() {
+async function carregarDivergencias() {
   divergenciasCustom = [];
   try {
     const raw = localStorage.getItem('SAC_DIVERGENCIAS_CUSTOM');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      divergenciasCustom = normalizarListaConfig(parsed);
+    if (raw) divergenciasCustom = normalizarListaConfig(JSON.parse(raw));
+  } catch {}
+  if (!fbDisponivel()) return;
+  try {
+    const fbData = await fbCarregarConfig('config', 'divergencias');
+    if (fbData && fbData.dados !== undefined && fbData.dados !== null) {
+      divergenciasCustom = normalizarListaConfig(fbData.dados);
+      try { localStorage.setItem('SAC_DIVERGENCIAS_CUSTOM', JSON.stringify(divergenciasCustom)); } catch {}
     }
   } catch {}
 }
@@ -1130,10 +1162,6 @@ function sairComBackup() {
   setTimeout(() => logout(), 1500);
 }
 
-function abrirModalConfig() {
-  abrirModal('modalConfig');
-}
-
 function atualizarBarraUsuario() {
   if (usuarioLogado) {
     document.querySelectorAll('.page-user-info').forEach(el => {
@@ -1170,10 +1198,10 @@ async function iniciarSistema() {
   await carregarSenhasSac();
   await carregarNotasDev();
   await carregarMercadoriasNF();
-  carregarBracosConfig();
-  carregarLojas();
-  carregarObservacoes();
-  carregarDivergencias();
+  await carregarBracosConfig();
+  await carregarLojas();
+  await carregarObservacoes();
+  await carregarDivergencias();
   configurarSnapshots();
   mesAtualSenhasSac = mesAtual;
   mesAtualNotasDev = mesAtual;

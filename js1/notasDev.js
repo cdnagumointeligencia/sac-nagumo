@@ -5,7 +5,10 @@ var _fbTimerNotas = null;
 var _pendentesNotasItem = {};
 
 async function carregarNotasDev() {
-  dadosNotasDev = lsGetCd('NOTAS_DEV_dados') || [];
+  var fbOk = await fbCarregarColecao('notasDevolucao', dadosNotasDev);
+  if (!fbOk) {
+    dadosNotasDev = lsGetCd('NOTAS_DEV_dados') || [];
+  }
   garantirIds(dadosNotasDev);
   if (!fbDisponivel() || !cdAtual) return;
   if (_snapNotas) { try { _snapNotas(); } catch (e) {} }

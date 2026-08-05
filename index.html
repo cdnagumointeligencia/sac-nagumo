@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style1.css">
   <link rel="stylesheet" href="style-index.css">
+  <link rel="stylesheet" href="modal-config.css">
 </head>
 <body>
   <!-- ========== TELA DE LOGIN ========== -->
@@ -88,51 +89,6 @@
   }
   </script>
 
-  <!-- Modal Configurações -->
-  <div id="modalConfig" class="modal">
-    <div class="modal-box">
-      <span class="modal-close" onclick="fecharModal('modalConfig')">&times;</span>
-      <h3>Configurações</h3>
-      <div class="config-grid">
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalUsuarios()">
-          <span class="config-icon">&#128100;</span>
-          <span class="config-label">Usuários</span>
-          <span class="config-desc">Adicionar, editar, excluir e redefinir senhas</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalBackup()">
-          <span class="config-icon">&#128190;</span>
-          <span class="config-label">Backup</span>
-          <span class="config-desc">Exportar e importar backup completo do sistema</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalLojas()">
-          <span class="config-icon">&#127970;</span>
-          <span class="config-label">Lojas</span>
-          <span class="config-desc">Gerenciar lista de lojas usada em todas as abas</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalBracos()">
-          <span class="config-icon">&#9881;</span>
-          <span class="config-label">Braços</span>
-          <span class="config-desc">Configurar lojas atendidas por braço (CD2)</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalObservacoes()">
-          <span class="config-icon">&#9997;</span>
-          <span class="config-label">Solução</span>
-          <span class="config-desc">Editar opções da coluna Solução de ambas as páginas</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalDivergencias()">
-          <span class="config-icon">&#9881;</span>
-          <span class="config-label">Divergência</span>
-          <span class="config-desc">Editar opções da coluna Divergência de cada CD</span>
-        </div>
-        <div class="config-card" onclick="fecharModal('modalConfig');abrirModalSenhasSAC()">
-          <span class="config-icon">&#128273;</span>
-          <span class="config-label">Senha SAC</span>
-          <span class="config-desc">Excluir senhas SAC e reajustar a numeração</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Lojas -->
   <div id="modalLojas" class="modal">
     <div class="modal-box" style="max-width:500px">
@@ -143,7 +99,7 @@
           placeholder="Ex: 20-AIMORE" onkeypress="if(event.key==='Enter')adicionarLoja()">
         <button class="btn success" onclick="adicionarLoja()">Adicionar</button>
       </div>
-      <div id="listaLojas" class="user-list" style="max-height:400px"></div>
+      <div id="listaLojas" class="user-list"></div>
     </div>
   </div>
 
@@ -162,7 +118,7 @@
           placeholder="Ex: 10, 25, 40" onkeypress="if(event.key==='Enter')adicionarBraco()">
         <button class="btn success" onclick="adicionarBraco()">Adicionar</button>
       </div>
-      <div id="listaBracos" class="user-list" style="max-height:400px"></div>
+      <div id="listaBracos" class="user-list"></div>
       <div class="modal-btns" style="margin-top:16px">
         <button class="btn danger" onclick="fecharModal('modalBracos')">Fechar</button>
       </div>
@@ -174,15 +130,12 @@
     <div class="modal-box" style="max-width:550px">
       <span class="modal-close" onclick="fecharModal('modalObservacoes')">&times;</span>
       <h3>&#9997; Gerenciar Solução</h3>
-      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
-        Lista única compartilhada entre CD1 e CD2.
-      </p>
       <div style="display:flex;gap:8px;margin-bottom:16px">
         <input type="text" id="novaObservacao" class="modal-input" style="margin:0;flex:1;text-align:left"
           placeholder="Ex: Solicitar nota de devolução" onkeypress="if(event.key==='Enter')adicionarObservacao()">
         <button class="btn success" onclick="adicionarObservacao()">Adicionar</button>
       </div>
-      <div id="listaObservacoes" class="user-list" style="max-height:380px"></div>
+      <div id="listaObservacoes" class="user-list"></div>
       <div class="modal-btns" style="margin-top:16px">
         <button class="btn danger" onclick="fecharModal('modalObservacoes')">Fechar</button>
       </div>
@@ -202,7 +155,7 @@
           placeholder="Ex: Sobra" onkeypress="if(event.key==='Enter')adicionarDivergencia()">
         <button class="btn success" onclick="adicionarDivergencia()">Adicionar</button>
       </div>
-      <div id="listaDivergencias" class="user-list" style="max-height:380px"></div>
+      <div id="listaDivergencias" class="user-list"></div>
       <div class="modal-btns" style="margin-top:16px">
         <button class="btn danger" onclick="fecharModal('modalDivergencias')">Fechar</button>
       </div>
@@ -229,7 +182,7 @@
         <button class="btn" onclick="resetarContadorSenhaSAC()" title="Reajusta o contador para a próxima senha seguir a maior ainda existente">Reajustar numeração</button>
         <button class="btn danger" onclick="zerarSenhasSAC()" title="Apaga TODAS as senhas SAC e zera a numeração para #1">Zerar tudo</button>
       </div>
-      <div id="listaSenhasSAC" class="user-list" style="max-height:400px"></div>
+      <div id="listaSenhasSAC" class="user-list"></div>
       <div class="modal-btns" style="margin-top:16px">
         <button class="btn danger" onclick="fecharModal('modalSenhasSAC')">Fechar</button>
       </div>
@@ -262,26 +215,15 @@
   <div id="modalUsuarios" class="modal">
     <div class="modal-box">
       <span class="modal-close" onclick="fecharModal('modalUsuarios')">&times;</span>
-      <h3 id="tituloModalUser">Acesso Restrito</h3>
-      <div id="senhaArea">
-        <input type="password" id="inputSenha" class="modal-input" placeholder="Digite a senha"
-          onkeypress="if(event.key==='Enter')validarSenha()">
-        <div id="senhaErro" style="color:var(--danger);text-align:center;display:none">Senha incorreta!</div>
-        <div class="modal-btns">
-          <button class="btn danger" onclick="fecharModal('modalUsuarios')">Cancelar</button>
-          <button class="btn success" onclick="validarSenha()">Confirmar</button>
-        </div>
+      <h3>Gerenciar Usuários</h3>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <input type="text" id="novoUsuario" class="modal-input" style="margin:0;flex:1;min-width:120px;text-align:left"
+          placeholder="Nome do usuário" onkeypress="if(event.key==='Enter')document.getElementById('novaSenhaUsuario').focus()">
+        <input type="password" id="novaSenhaUsuario" class="modal-input" style="margin:0;flex:0.6;min-width:100px;text-align:left"
+          placeholder="Senha" value="123456" onkeypress="if(event.key==='Enter')adicionarUsuario()">
+        <button class="btn success" onclick="adicionarUsuario()">Adicionar</button>
       </div>
-      <div id="gestaoArea" style="display:none">
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <input type="text" id="novoUsuario" class="modal-input" style="margin:0;flex:1;min-width:120px;text-align:left"
-            placeholder="Nome do usuário" onkeypress="if(event.key==='Enter')document.getElementById('novaSenhaUsuario').focus()">
-          <input type="password" id="novaSenhaUsuario" class="modal-input" style="margin:0;flex:0.6;min-width:100px;text-align:left"
-            placeholder="Senha" value="123456" onkeypress="if(event.key==='Enter')adicionarUsuario()">
-          <button class="btn success" onclick="adicionarUsuario()">Adicionar</button>
-        </div>
-        <div id="listaUsuarios" class="user-list"></div>
-      </div>
+      <div id="listaUsuarios" class="user-list"></div>
     </div>
   </div>
 
@@ -292,5 +234,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="js1/firebase.js"></script>
   <script src="login.js"></script>
+  <script src="modal-config.js"></script>
 </body>
 </html>

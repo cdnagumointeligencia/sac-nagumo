@@ -60,10 +60,10 @@ document.addEventListener('input', function(e) {
     await carregarNotasDev();
     await carregarProdutividade();
     await carregarMercadoriasNF();
-    carregarBracosConfig();
-    carregarLojas();
-    carregarObservacoes();
-    carregarDivergencias();
+    await carregarBracosConfig();
+    await carregarLojas();
+    await carregarObservacoes();
+    await carregarDivergencias();
     configurarSnapshots();
     mesAtualSenhasSac = mesAtual;
     mesAtualNotasDev = mesAtual;
