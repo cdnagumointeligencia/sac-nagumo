@@ -6,7 +6,7 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
 
 const DIVERGENCIAS_CD1 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja'];
 const DIVERGENCIAS_CD2 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja', 'Não Checada', 'Agrupada', 'Aguardando Montagem'];
-const OBSERVACOES_CD1 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar a próxima entrega'];
+const OBSERVACOES_CD1 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar próxima entrega'];
 const OBSERVACOES_CD2 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar próxima entrega'];
 
 const BRACOS_DEFAULT = {

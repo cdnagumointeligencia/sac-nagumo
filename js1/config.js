@@ -15,7 +15,7 @@ function getDivergencias() {
   }
   return DIVERGENCIAS_CD1.slice().sort(cmp);
 }
-const OBSERVACOES_CD1 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar a próxima entrega'];
+const OBSERVACOES_CD1 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar próxima entrega'];
 function getObservacoes() {
   function cmp(a, b) { return String(a).localeCompare(String(b), 'pt-BR'); }
   if (typeof observacoesCustom !== 'undefined' && Array.isArray(observacoesCustom) && observacoesCustom.length > 0) {
