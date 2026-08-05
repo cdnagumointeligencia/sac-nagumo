@@ -461,39 +461,19 @@ function configurarSnapshots() {
     }
   });
   fbOnSnapshotConfig('config', 'observacoes', function (data) {
-    if (data && typeof data.dados === 'object' && data.dados !== null) {
-      ['CD1', 'CD2'].forEach(function (key) {
-        var fbArr = data.dados[key];
-        var localArr = observacoesCustom[key];
-        if (Array.isArray(fbArr) && fbArr.length > 0) {
-          if (Array.isArray(localArr) && localArr.length > fbArr.length) {
-            data.dados[key] = localArr;
-          }
-        } else if (Array.isArray(localArr) && localArr.length > 0) {
-          data.dados[key] = localArr;
-        }
-      });
-      observacoesCustom = data.dados;
-    } else if (fbDisponivel()) {
-      fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
+    if (data && data.dados !== undefined && data.dados !== null) {
+      observacoesCustom = normalizarListaConfig(data.dados);
+      if (!Array.isArray(data.dados)) {
+        fbSalvarConfig('config', 'observacoes', { dados: observacoesCustom });
+      }
     }
   });
   fbOnSnapshotConfig('config', 'divergencias', function (data) {
-    if (data && typeof data.dados === 'object' && data.dados !== null) {
-      ['CD1', 'CD2'].forEach(function (key) {
-        var fbArr = data.dados[key];
-        var localArr = divergenciasCustom[key];
-        if (Array.isArray(fbArr) && fbArr.length > 0) {
-          if (Array.isArray(localArr) && localArr.length > fbArr.length) {
-            data.dados[key] = localArr;
-          }
-        } else if (Array.isArray(localArr) && localArr.length > 0) {
-          data.dados[key] = localArr;
-        }
-      });
-      divergenciasCustom = data.dados;
-    } else if (fbDisponivel()) {
-      fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
+    if (data && data.dados !== undefined && data.dados !== null) {
+      divergenciasCustom = normalizarListaConfig(data.dados);
+      if (!Array.isArray(data.dados)) {
+        fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustom });
+      }
     }
   });
 }
@@ -810,21 +790,34 @@ function excluirLoja(idx) {
 }
 
 // ==================== GERENCIAR SOLUÇÃO / OBSERVAÇÃO ====================
-let observacoesCustom = {};
+function normalizarListaConfig(dados) {
+  if (Array.isArray(dados)) return dados.slice();
+  if (dados && typeof dados === 'object') {
+    const lista = [];
+    ['CD1', 'CD2'].forEach(key => {
+      const arr = dados[key];
+      if (Array.isArray(arr)) {
+        arr.forEach(item => {
+          if (typeof item === 'string' && lista.indexOf(item) === -1) lista.push(item);
+        });
+      }
+    });
+    return lista;
+  }
+  return [];
+}
+
+let observacoesCustom = [];
 
 function carregarObservacoes() {
+  observacoesCustom = [];
   try {
     const raw = localStorage.getItem('SAC_OBSERVACOES_CUSTOM');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (typeof parsed === 'object' && parsed !== null) {
-        observacoesCustom = parsed;
-      }
+      observacoesCustom = normalizarListaConfig(parsed);
     }
   } catch {}
-  if (!observacoesCustom || Object.keys(observacoesCustom).length === 0) {
-    observacoesCustom = {};
-  }
 }
 
 function salvarObservacoes() {
@@ -833,16 +826,14 @@ function salvarObservacoes() {
 }
 
 function abrirModalObservacoes() {
-  document.getElementById('modalObsCD').textContent = cdAtual;
+  const el = document.getElementById('modalObsCD');
+  if (el) el.textContent = cdAtual;
   atualizarListaObservacoes();
   abrirModal('modalObservacoes');
 }
 
 function obterObsArray() {
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (observacoesCustom[key] && Array.isArray(observacoesCustom[key]) && observacoesCustom[key].length > 0) {
-    return observacoesCustom[key];
-  }
+  if (Array.isArray(observacoesCustom) && observacoesCustom.length > 0) return observacoesCustom;
   return cdAtual === 'CD1' ? OBSERVACOES_CD1 : OBSERVACOES_CD2;
 }
 
@@ -880,11 +871,8 @@ function adicionarObservacao() {
     toast('Opção já existe', 'error');
     return;
   }
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (!observacoesCustom[key]) {
-    observacoesCustom[key] = cdAtual === 'CD1' ? [...OBSERVACOES_CD1] : [...OBSERVACOES_CD2];
-  }
-  observacoesCustom[key].push(val);
+  if (!Array.isArray(observacoesCustom)) observacoesCustom = arr.slice();
+  observacoesCustom.push(val);
   salvarObservacoes();
   input.value = '';
   atualizarListaObservacoes();
@@ -899,18 +887,15 @@ function editarObservacao(idx) {
     toast('Digite o texto da opção', 'error');
     return;
   }
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (!observacoesCustom[key]) {
-    observacoesCustom[key] = cdAtual === 'CD1' ? [...OBSERVACOES_CD1] : [...OBSERVACOES_CD2];
-  }
-  const arr = observacoesCustom[key];
+  const arr = obterObsArray();
   const antigo = arr[idx];
-  if (antigo.toUpperCase() === novoVal.toUpperCase()) return;
+  if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
   if (arr.some((a, i) => i !== idx && a.toUpperCase() === novoVal.toUpperCase())) {
     toast('Opção já existe', 'error');
     return;
   }
-  arr[idx] = novoVal;
+  if (!Array.isArray(observacoesCustom)) observacoesCustom = arr.slice();
+  observacoesCustom[idx] = novoVal;
   salvarObservacoes();
   atualizarListaObservacoes();
   renderizarTabela();
@@ -922,11 +907,8 @@ function excluirObservacao(idx) {
   const item = arr[idx];
   if (!item) return;
   if (!confirm('Excluir "' + item + '"?')) return;
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (!observacoesCustom[key]) {
-    observacoesCustom[key] = cdAtual === 'CD1' ? [...OBSERVACOES_CD1] : [...OBSERVACOES_CD2];
-  }
-  observacoesCustom[key].splice(idx, 1);
+  if (!Array.isArray(observacoesCustom)) observacoesCustom = arr.slice();
+  observacoesCustom.splice(idx, 1);
   salvarObservacoes();
   atualizarListaObservacoes();
   renderizarTabela();
@@ -934,21 +916,17 @@ function excluirObservacao(idx) {
 }
 
 // ==================== GERENCIAR DIVERGÊNCIA ====================
-let divergenciasCustom = {};
+let divergenciasCustom = [];
 
 function carregarDivergencias() {
+  divergenciasCustom = [];
   try {
     const raw = localStorage.getItem('SAC_DIVERGENCIAS_CUSTOM');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (typeof parsed === 'object' && parsed !== null) {
-        divergenciasCustom = parsed;
-      }
+      divergenciasCustom = normalizarListaConfig(parsed);
     }
   } catch {}
-  if (!divergenciasCustom || Object.keys(divergenciasCustom).length === 0) {
-    divergenciasCustom = {};
-  }
 }
 
 function salvarDivergencias() {
@@ -957,16 +935,14 @@ function salvarDivergencias() {
 }
 
 function abrirModalDivergencias() {
-  document.getElementById('modalDivCD').textContent = cdAtual;
+  const el = document.getElementById('modalDivCD');
+  if (el) el.textContent = cdAtual;
   atualizarListaDivergencias();
   abrirModal('modalDivergencias');
 }
 
 function obterDivArray() {
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (divergenciasCustom[key] && Array.isArray(divergenciasCustom[key]) && divergenciasCustom[key].length > 0) {
-    return divergenciasCustom[key];
-  }
+  if (Array.isArray(divergenciasCustom) && divergenciasCustom.length > 0) return divergenciasCustom;
   return cdAtual === 'CD1' ? DIVERGENCIAS_CD1 : DIVERGENCIAS_CD2;
 }
 
@@ -1004,11 +980,8 @@ function adicionarDivergencia() {
     toast('Opção já existe', 'error');
     return;
   }
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (!divergenciasCustom[key]) {
-    divergenciasCustom[key] = cdAtual === 'CD1' ? [...DIVERGENCIAS_CD1] : [...DIVERGENCIAS_CD2];
-  }
-  divergenciasCustom[key].push(val);
+  if (!Array.isArray(divergenciasCustom)) divergenciasCustom = arr.slice();
+  divergenciasCustom.push(val);
   salvarDivergencias();
   input.value = '';
   atualizarListaDivergencias();
@@ -1023,18 +996,15 @@ function editarDivergencia(idx) {
     toast('Digite o texto da opção', 'error');
     return;
   }
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (!divergenciasCustom[key]) {
-    divergenciasCustom[key] = cdAtual === 'CD1' ? [...DIVERGENCIAS_CD1] : [...DIVERGENCIAS_CD2];
-  }
-  const arr = divergenciasCustom[key];
+  const arr = obterDivArray();
   const antigo = arr[idx];
-  if (antigo.toUpperCase() === novoVal.toUpperCase()) return;
+  if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
   if (arr.some((a, i) => i !== idx && a.toUpperCase() === novoVal.toUpperCase())) {
     toast('Opção já existe', 'error');
     return;
   }
-  arr[idx] = novoVal;
+  if (!Array.isArray(divergenciasCustom)) divergenciasCustom = arr.slice();
+  divergenciasCustom[idx] = novoVal;
   salvarDivergencias();
   atualizarListaDivergencias();
   renderizarTabela();
@@ -1046,11 +1016,8 @@ function excluirDivergencia(idx) {
   const item = arr[idx];
   if (!item) return;
   if (!confirm('Excluir "' + item + '"?')) return;
-  const key = cdAtual === 'CD1' ? 'CD1' : 'CD2';
-  if (!divergenciasCustom[key]) {
-    divergenciasCustom[key] = cdAtual === 'CD1' ? [...DIVERGENCIAS_CD1] : [...DIVERGENCIAS_CD2];
-  }
-  divergenciasCustom[key].splice(idx, 1);
+  if (!Array.isArray(divergenciasCustom)) divergenciasCustom = arr.slice();
+  divergenciasCustom.splice(idx, 1);
   salvarDivergencias();
   atualizarListaDivergencias();
   renderizarTabela();

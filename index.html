@@ -173,7 +173,10 @@
   <div id="modalObservacoes" class="modal">
     <div class="modal-box" style="max-width:550px">
       <span class="modal-close" onclick="fecharModal('modalObservacoes')">&times;</span>
-      <h3>&#9997; Gerenciar Solução — <span id="modalObsCD">CD1</span></h3>
+      <h3>&#9997; Gerenciar Solução</h3>
+      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
+        Lista única compartilhada entre CD1 e CD2.
+      </p>
       <div style="display:flex;gap:8px;margin-bottom:16px">
         <input type="text" id="novaObservacao" class="modal-input" style="margin:0;flex:1;text-align:left"
           placeholder="Ex: Solicitar nota de devolução" onkeypress="if(event.key==='Enter')adicionarObservacao()">
@@ -190,7 +193,10 @@
   <div id="modalDivergencias" class="modal">
     <div class="modal-box" style="max-width:550px">
       <span class="modal-close" onclick="fecharModal('modalDivergencias')">&times;</span>
-      <h3>&#9881; Gerenciar Divergência — <span id="modalDivCD">CD1</span></h3>
+      <h3>&#9881; Gerenciar Divergência</h3>
+      <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px">
+        Lista única compartilhada entre CD1 e CD2.
+      </p>
       <div style="display:flex;gap:8px;margin-bottom:16px">
         <input type="text" id="novaDivergencia" class="modal-input" style="margin:0;flex:1;text-align:left"
           placeholder="Ex: Sobra" onkeypress="if(event.key==='Enter')adicionarDivergencia()">

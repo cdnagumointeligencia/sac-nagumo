@@ -43,8 +43,36 @@ var usuarioLogado = null;
 var todosUsuariosLogin = [];
 var lojasMercadoriasLogin = [];
 var bracosConfigLogin = {};
-var observacoesCustomLogin = {};
-var divergenciasCustomLogin = {};
+var observacoesCustomLogin = [];
+var divergenciasCustomLogin = [];
+
+// ==================== NORMALIZAÇÃO DE LISTAS DE CONFIG ====================
+function normalizarListaConfig(dados) {
+  if (Array.isArray(dados)) return dados.slice();
+  if (dados && typeof dados === 'object') {
+    var lista = [];
+    ['CD1', 'CD2'].forEach(function (key) {
+      var arr = dados[key];
+      if (Array.isArray(arr)) {
+        arr.forEach(function (item) {
+          if (typeof item === 'string' && lista.indexOf(item) === -1) lista.push(item);
+        });
+      }
+    });
+    return lista;
+  }
+  return [];
+}
+
+function mesclarListasPadrao(lista1, lista2) {
+  var out = [];
+  [lista1, lista2].forEach(function (arr) {
+    (arr || []).forEach(function (item) {
+      if (out.indexOf(item) === -1) out.push(item);
+    });
+  });
+  return out;
+}
 
 // ==================== LOCALSTORAGE HELPERS ====================
 function lsGetShared(key) {
@@ -166,60 +194,40 @@ async function hashSenha(senha) {
 
 // ==================== USUÁRIOS ====================
 async function carregarUsuariosLogin() {
-  var fbOk = false;
-  try {
-    var resultados = await fbQuery('usuarios', []);
-    if (resultados && resultados.length > 0) {
-      var fbUsuarios = [];
-      resultados.forEach(function (r) {
-        fbUsuarios.push({
-          nome: r.nome || '',
-          ativo: r.ativo !== false,
-          admin: r.admin === true,
-          senhaHash: r.senhaHash || ''
+  todosUsuariosLogin = [];
+  if (fbDisponivel()) {
+    try {
+      var resultados = await fbQuery('usuarios', []);
+      if (resultados && resultados.length > 0) {
+        var fbUsuarios = [];
+        resultados.forEach(function (r) {
+          fbUsuarios.push({
+            nome: r.nome || '',
+            ativo: r.ativo !== false,
+            admin: r.admin === true,
+            senhaHash: r.senhaHash || ''
+          });
         });
-      });
-      if (fbUsuarios.length > 0) {
         todosUsuariosLogin = fbUsuarios;
-        fbOk = true;
       }
-    }
-  } catch (e) {}
-
-  if (fbOk) {
-    var nomesFb = {};
-    todosUsuariosLogin.forEach(function (u) { nomesFb[u.nome] = true; });
-    var salvosMerge = lsGetShared('SAC_USUARIOS') || [];
-    var pendentes = [];
-    for (var u of salvosMerge) {
-      if (!u.nome || nomesFb[u.nome]) continue;
+    } catch (e) {}
+    await garantirAdminLogin();
+    return;
+  }
+  var salvos = lsGetShared('SAC_USUARIOS') || [];
+  if (salvos.length > 0) {
+    for (var u of salvos) {
       if (!u.senhaHash) {
         u.senhaHash = await hashSenha(u.senha || SENHA_PADRAO);
         delete u.senha;
       }
-      pendentes.push(u);
     }
-    if (pendentes.length > 0) {
-      todosUsuariosLogin = todosUsuariosLogin.concat(pendentes);
-      todosUsuariosLogin.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
-    }
+    todosUsuariosLogin = salvos;
   }
+  await garantirAdminLogin();
+}
 
-  if (!fbOk) {
-    var salvos = lsGetShared('SAC_USUARIOS') || [];
-    if (salvos.length > 0) {
-      for (var u of salvos) {
-        if (!u.senhaHash) {
-          u.senhaHash = await hashSenha(u.senha || SENHA_PADRAO);
-          delete u.senha;
-        }
-      }
-      todosUsuariosLogin = salvos;
-    } else {
-      todosUsuariosLogin = [];
-    }
-  }
-
+async function garantirAdminLogin() {
   var adminEncontrado = false;
   for (var i = 0; i < todosUsuariosLogin.length; i++) {
     if (todosUsuariosLogin[i].nome === ADMIN_USER) {
@@ -233,25 +241,27 @@ async function carregarUsuariosLogin() {
   if (!adminEncontrado) {
     var adminHash = await hashSenha(ADMIN_SENHA);
     todosUsuariosLogin.unshift({ nome: ADMIN_USER, ativo: true, senhaHash: adminHash, admin: true });
+    if (fbDisponivel()) {
+      try {
+        await fbDocSet('usuarios', 'usr_' + ADMIN_USER, { nome: ADMIN_USER, ativo: true, admin: true, senhaHash: adminHash });
+      } catch (e) {}
+    }
   }
-  await salvarUsuariosLogin();
 }
 
 async function salvarUsuariosLogin() {
+  if (!fbDisponivel()) return;
   var snapshot = todosUsuariosLogin.slice();
-  lsSetShared('SAC_USUARIOS', snapshot);
-  if (fbDisponivel()) {
-    for (var i = 0; i < snapshot.length; i++) {
-      var u = snapshot[i];
-      if (!u.nome) continue;
-      var docId = 'usr_' + u.nome;
-      await fbDocSet('usuarios', docId, {
-        nome: u.nome,
-        ativo: u.ativo !== false,
-        admin: u.admin === true,
-        senhaHash: u.senhaHash || ''
-      });
-    }
+  for (var i = 0; i < snapshot.length; i++) {
+    var u = snapshot[i];
+    if (!u.nome) continue;
+    var docId = 'usr_' + u.nome;
+    await fbDocSet('usuarios', docId, {
+      nome: u.nome,
+      ativo: u.ativo !== false,
+      admin: u.admin === true,
+      senhaHash: u.senhaHash || ''
+    });
   }
 }
 
@@ -335,8 +345,6 @@ async function adicionarUsuario() {
     todosUsuariosLogin.push(novoUser);
     todosUsuariosLogin.sort(function (a, b) { return a.nome.localeCompare(b.nome); });
   }
-  var novaLista = todosUsuariosLogin.slice();
-  lsSetShared('SAC_USUARIOS', novaLista);
   document.getElementById('novoUsuario').value = '';
   document.getElementById('novaSenhaUsuario').value = SENHA_PADRAO;
   renderizarListaUsuarios();
@@ -356,8 +364,6 @@ async function toggleUsuarioAtivo(nome) {
     var docId = 'usr_' + nome;
     await fbDocSet('usuarios', docId, { nome: nome, ativo: u.ativo, admin: u.admin === true, senhaHash: u.senhaHash || '' });
   }
-  var novaLista = todosUsuariosLogin.slice();
-  lsSetShared('SAC_USUARIOS', novaLista);
   renderizarListaUsuarios();
   popularDropdownUsuarios();
   toast(nome + ' ' + (u.ativo ? 'reativado' : 'desativado'), 'success');
@@ -378,8 +384,6 @@ async function resetarSenhaUsuario(nome) {
       var docId = 'usr_' + nome;
       await fbDocSet('usuarios', docId, { nome: nome, ativo: u.ativo, admin: u.admin === true, senhaHash: u.senhaHash });
     }
-    var novaLista = todosUsuariosLogin.slice();
-    lsSetShared('SAC_USUARIOS', novaLista);
     input.value = '';
     renderizarListaUsuarios();
     popularDropdownUsuarios();
@@ -403,8 +407,6 @@ async function excluirUsuarioLogin(nome) {
   if (idx !== -1) {
     todosUsuariosLogin.splice(idx, 1);
   }
-  var novaLista = todosUsuariosLogin.slice();
-  lsSetShared('SAC_USUARIOS', novaLista);
   renderizarListaUsuarios();
   popularDropdownUsuarios();
   toast(nome + ' excluído', 'success');
@@ -431,32 +433,19 @@ function normalizarLoja(nome) {
 }
 
 async function carregarLojasLogin() {
+  lojasMercadoriasLogin = LOJAS_MERCADORIAS_DEFAULT.slice();
+  if (!fbDisponivel()) return;
   try {
-    var raw = localStorage.getItem('SAC_LOJAS_MERCADORIAS');
-    if (raw) {
-      var salvas = JSON.parse(raw);
-      if (Array.isArray(salvas) && salvas.length > 0) {
-        lojasMercadoriasLogin = salvas;
-      }
+    var fbData = await fbCarregarConfig('config', 'lojas');
+    if (fbData && Array.isArray(fbData.dados) && fbData.dados.length > 0) {
+      lojasMercadoriasLogin = fbData.dados;
+    } else {
+      await fbSalvarConfig('config', 'lojas', { dados: lojasMercadoriasLogin });
     }
-  } catch {}
-  if (!lojasMercadoriasLogin || lojasMercadoriasLogin.length === 0) {
-    lojasMercadoriasLogin = LOJAS_MERCADORIAS_DEFAULT.slice();
-  }
-  if (fbDisponivel()) {
-    try {
-      var fbData = await fbCarregarConfig('config', 'lojas');
-      if (fbData && Array.isArray(fbData.dados) && fbData.dados.length > 0) {
-        lojasMercadoriasLogin = fbData.dados;
-      } else {
-        await fbSalvarConfig('config', 'lojas', { dados: lojasMercadoriasLogin });
-      }
-    } catch (e) {}
-  }
+  } catch (e) {}
 }
 
 function salvarLojasLogin() {
-  try { localStorage.setItem('SAC_LOJAS_MERCADORIAS', JSON.stringify(lojasMercadoriasLogin)); } catch {}
   fbSalvarConfig('config', 'lojas', { dados: lojasMercadoriasLogin });
 }
 
@@ -533,35 +522,22 @@ function excluirLoja(idx) {
 
 // ==================== GERENCIAR BRAÇOS ====================
 async function carregarBracosLogin() {
+  bracosConfigLogin = {};
+  Object.entries(BRACOS_DEFAULT).forEach(function (entry) {
+    bracosConfigLogin[entry[0]] = entry[1];
+  });
+  if (!fbDisponivel()) return;
   try {
-    var raw = localStorage.getItem('SAC_brasConfig');
-    if (raw) {
-      var salvas = JSON.parse(raw);
-      if (salvas && Object.keys(salvas).length > 0) {
-        bracosConfigLogin = salvas;
-      }
+    var fbData = await fbCarregarConfig('config', 'bracos');
+    if (fbData && fbData.dados && typeof fbData.dados === 'object' && Object.keys(fbData.dados).length > 0) {
+      bracosConfigLogin = fbData.dados;
+    } else {
+      await fbSalvarConfig('config', 'bracos', { dados: bracosConfigLogin });
     }
-  } catch {}
-  if (!bracosConfigLogin || Object.keys(bracosConfigLogin).length === 0) {
-    bracosConfigLogin = {};
-    Object.entries(BRACOS_DEFAULT).forEach(function (entry) {
-      bracosConfigLogin[entry[0]] = entry[1];
-    });
-  }
-  if (fbDisponivel()) {
-    try {
-      var fbData = await fbCarregarConfig('config', 'bracos');
-      if (fbData && fbData.dados && Object.keys(fbData.dados).length > 0) {
-        bracosConfigLogin = fbData.dados;
-      } else {
-        await fbSalvarConfig('config', 'bracos', { dados: bracosConfigLogin });
-      }
-    } catch (e) {}
-  }
+  } catch (e) {}
 }
 
 function salvarBracosLogin() {
-  try { localStorage.setItem('SAC_brasConfig', JSON.stringify(bracosConfigLogin)); } catch {}
   fbSalvarConfig('config', 'bracos', { dados: bracosConfigLogin });
 }
 
@@ -650,32 +626,23 @@ function excluirBraco(idx) {
 
 // ==================== GERENCIAR SOLUÇÃO / OBSERVAÇÕES ====================
 async function carregarObservacoesLogin() {
+  observacoesCustomLogin = normalizarListaConfig(null);
+  if (!fbDisponivel()) return;
   try {
-    var raw = localStorage.getItem('SAC_OBSERVACOES_CUSTOM');
-    if (raw) {
-      var parsed = JSON.parse(raw);
-      if (typeof parsed === 'object' && parsed !== null) {
-        observacoesCustomLogin = parsed;
-      }
-    }
-  } catch {}
-  if (!observacoesCustomLogin || Object.keys(observacoesCustomLogin).length === 0) {
-    observacoesCustomLogin = {};
-  }
-  if (fbDisponivel()) {
-    try {
-      var fbData = await fbCarregarConfig('config', 'observacoes');
-      if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
-        observacoesCustomLogin = fbData.dados;
-      } else {
+    var fbData = await fbCarregarConfig('config', 'observacoes');
+    if (fbData && fbData.dados !== undefined && fbData.dados !== null) {
+      observacoesCustomLogin = normalizarListaConfig(fbData.dados);
+      if (!Array.isArray(fbData.dados)) {
         await fbSalvarConfig('config', 'observacoes', { dados: observacoesCustomLogin });
       }
-    } catch (e) {}
-  }
+    } else {
+      observacoesCustomLogin = mesclarListasPadrao(OBSERVACOES_CD1, OBSERVACOES_CD2);
+      await fbSalvarConfig('config', 'observacoes', { dados: observacoesCustomLogin });
+    }
+  } catch (e) {}
 }
 
 function salvarObservacoesLogin() {
-  try { localStorage.setItem('SAC_OBSERVACOES_CUSTOM', JSON.stringify(observacoesCustomLogin)); } catch {}
   fbSalvarConfig('config', 'observacoes', { dados: observacoesCustomLogin });
 }
 
@@ -703,13 +670,7 @@ function renderizarListaObservacoes() {
 }
 
 function obterObsArrayLogin() {
-  var key = 'CD1';
-  if (observacoesCustomLogin['CD1'] && Array.isArray(observacoesCustomLogin['CD1']) && observacoesCustomLogin['CD1'].length > 0) {
-    return observacoesCustomLogin['CD1'];
-  }
-  if (observacoesCustomLogin['CD2'] && Array.isArray(observacoesCustomLogin['CD2']) && observacoesCustomLogin['CD2'].length > 0) {
-    return observacoesCustomLogin['CD2'];
-  }
+  if (Array.isArray(observacoesCustomLogin) && observacoesCustomLogin.length > 0) return observacoesCustomLogin;
   return OBSERVACOES_CD1;
 }
 
@@ -725,12 +686,8 @@ function adicionarObservacao() {
     toast('Opção já existe', 'error');
     return;
   }
-  ['CD1', 'CD2'].forEach(function (key) {
-    if (!observacoesCustomLogin[key]) {
-      observacoesCustomLogin[key] = key === 'CD1' ? OBSERVACOES_CD1.slice() : OBSERVACOES_CD2.slice();
-    }
-    observacoesCustomLogin[key].push(val);
-  });
+  if (!Array.isArray(observacoesCustomLogin)) observacoesCustomLogin = arr.slice();
+  observacoesCustomLogin.push(val);
   salvarObservacoesLogin();
   input.value = '';
   renderizarListaObservacoes();
@@ -744,19 +701,15 @@ function editarObservacao(idx) {
     toast('Digite o texto da opção', 'error');
     return;
   }
-  ['CD1', 'CD2'].forEach(function (key) {
-    if (!observacoesCustomLogin[key]) {
-      observacoesCustomLogin[key] = key === 'CD1' ? OBSERVACOES_CD1.slice() : OBSERVACOES_CD2.slice();
-    }
-    var arr = observacoesCustomLogin[key];
-    var antigo = arr[idx];
-    if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
-    if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
-      toast('Opção já existe', 'error');
-      return;
-    }
-    arr[idx] = novoVal;
-  });
+  var arr = obterObsArrayLogin();
+  var antigo = arr[idx];
+  if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
+  if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
+    toast('Opção já existe', 'error');
+    return;
+  }
+  if (!Array.isArray(observacoesCustomLogin)) observacoesCustomLogin = arr.slice();
+  observacoesCustomLogin[idx] = novoVal;
   salvarObservacoesLogin();
   renderizarListaObservacoes();
   toast('Opção atualizada', 'success');
@@ -767,12 +720,8 @@ function excluirObservacao(idx) {
   var item = arr[idx];
   if (!item) return;
   if (!confirm('Excluir "' + item + '"?')) return;
-  ['CD1', 'CD2'].forEach(function (key) {
-    if (!observacoesCustomLogin[key]) {
-      observacoesCustomLogin[key] = key === 'CD1' ? OBSERVACOES_CD1.slice() : OBSERVACOES_CD2.slice();
-    }
-    observacoesCustomLogin[key].splice(idx, 1);
-  });
+  if (!Array.isArray(observacoesCustomLogin)) observacoesCustomLogin = arr.slice();
+  observacoesCustomLogin.splice(idx, 1);
   salvarObservacoesLogin();
   renderizarListaObservacoes();
   toast(item + ' excluída', 'success');
@@ -780,32 +729,23 @@ function excluirObservacao(idx) {
 
 // ==================== GERENCIAR DIVERGÊNCIAS ====================
 async function carregarDivergenciasLogin() {
+  divergenciasCustomLogin = normalizarListaConfig(null);
+  if (!fbDisponivel()) return;
   try {
-    var raw = localStorage.getItem('SAC_DIVERGENCIAS_CUSTOM');
-    if (raw) {
-      var parsed = JSON.parse(raw);
-      if (typeof parsed === 'object' && parsed !== null) {
-        divergenciasCustomLogin = parsed;
-      }
-    }
-  } catch {}
-  if (!divergenciasCustomLogin || Object.keys(divergenciasCustomLogin).length === 0) {
-    divergenciasCustomLogin = {};
-  }
-  if (fbDisponivel()) {
-    try {
-      var fbData = await fbCarregarConfig('config', 'divergencias');
-      if (fbData && typeof fbData.dados === 'object' && fbData.dados !== null) {
-        divergenciasCustomLogin = fbData.dados;
-      } else {
+    var fbData = await fbCarregarConfig('config', 'divergencias');
+    if (fbData && fbData.dados !== undefined && fbData.dados !== null) {
+      divergenciasCustomLogin = normalizarListaConfig(fbData.dados);
+      if (!Array.isArray(fbData.dados)) {
         await fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustomLogin });
       }
-    } catch (e) {}
-  }
+    } else {
+      divergenciasCustomLogin = mesclarListasPadrao(DIVERGENCIAS_CD1, DIVERGENCIAS_CD2);
+      await fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustomLogin });
+    }
+  } catch (e) {}
 }
 
 function salvarDivergenciasLogin() {
-  try { localStorage.setItem('SAC_DIVERGENCIAS_CUSTOM', JSON.stringify(divergenciasCustomLogin)); } catch {}
   fbSalvarConfig('config', 'divergencias', { dados: divergenciasCustomLogin });
 }
 
@@ -833,13 +773,7 @@ function renderizarListaDivergencias() {
 }
 
 function obterDivArrayLogin() {
-  var key = 'CD1';
-  if (divergenciasCustomLogin['CD1'] && Array.isArray(divergenciasCustomLogin['CD1']) && divergenciasCustomLogin['CD1'].length > 0) {
-    return divergenciasCustomLogin['CD1'];
-  }
-  if (divergenciasCustomLogin['CD2'] && Array.isArray(divergenciasCustomLogin['CD2']) && divergenciasCustomLogin['CD2'].length > 0) {
-    return divergenciasCustomLogin['CD2'];
-  }
+  if (Array.isArray(divergenciasCustomLogin) && divergenciasCustomLogin.length > 0) return divergenciasCustomLogin;
   return DIVERGENCIAS_CD1;
 }
 
@@ -855,12 +789,8 @@ function adicionarDivergencia() {
     toast('Opção já existe', 'error');
     return;
   }
-  ['CD1', 'CD2'].forEach(function (key) {
-    if (!divergenciasCustomLogin[key]) {
-      divergenciasCustomLogin[key] = key === 'CD1' ? DIVERGENCIAS_CD1.slice() : DIVERGENCIAS_CD2.slice();
-    }
-    divergenciasCustomLogin[key].push(val);
-  });
+  if (!Array.isArray(divergenciasCustomLogin)) divergenciasCustomLogin = arr.slice();
+  divergenciasCustomLogin.push(val);
   salvarDivergenciasLogin();
   input.value = '';
   renderizarListaDivergencias();
@@ -874,19 +804,15 @@ function editarDivergencia(idx) {
     toast('Digite o texto da opção', 'error');
     return;
   }
-  ['CD1', 'CD2'].forEach(function (key) {
-    if (!divergenciasCustomLogin[key]) {
-      divergenciasCustomLogin[key] = key === 'CD1' ? DIVERGENCIAS_CD1.slice() : DIVERGENCIAS_CD2.slice();
-    }
-    var arr = divergenciasCustomLogin[key];
-    var antigo = arr[idx];
-    if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
-    if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
-      toast('Opção já existe', 'error');
-      return;
-    }
-    arr[idx] = novoVal;
-  });
+  var arr = obterDivArrayLogin();
+  var antigo = arr[idx];
+  if (antigo && antigo.toUpperCase() === novoVal.toUpperCase()) return;
+  if (arr.some(function (a, i) { return i !== idx && a.toUpperCase() === novoVal.toUpperCase(); })) {
+    toast('Opção já existe', 'error');
+    return;
+  }
+  if (!Array.isArray(divergenciasCustomLogin)) divergenciasCustomLogin = arr.slice();
+  divergenciasCustomLogin[idx] = novoVal;
   salvarDivergenciasLogin();
   renderizarListaDivergencias();
   toast('Opção atualizada', 'success');
@@ -897,12 +823,8 @@ function excluirDivergencia(idx) {
   var item = arr[idx];
   if (!item) return;
   if (!confirm('Excluir "' + item + '"?')) return;
-  ['CD1', 'CD2'].forEach(function (key) {
-    if (!divergenciasCustomLogin[key]) {
-      divergenciasCustomLogin[key] = key === 'CD1' ? DIVERGENCIAS_CD1.slice() : DIVERGENCIAS_CD2.slice();
-    }
-    divergenciasCustomLogin[key].splice(idx, 1);
-  });
+  if (!Array.isArray(divergenciasCustomLogin)) divergenciasCustomLogin = arr.slice();
+  divergenciasCustomLogin.splice(idx, 1);
   salvarDivergenciasLogin();
   renderizarListaDivergencias();
   toast(item + ' excluída', 'success');
@@ -1495,21 +1417,54 @@ async function fazerLogin(cd) {
 (async function () {
   await fbInit();
 
-  if (fbDisponivel()) {
-    await Promise.all([
-      carregarUsuariosLogin(),
-      carregarLojasLogin(),
-      carregarBracosLogin(),
-      carregarObservacoesLogin(),
-      carregarDivergenciasLogin()
-    ]);
-  } else {
-    await carregarUsuariosLogin();
-    await carregarLojasLogin();
-    await carregarBracosLogin();
-    await carregarObservacoesLogin();
-    await carregarDivergenciasLogin();
-  }
+  await Promise.all([
+    carregarUsuariosLogin(),
+    carregarLojasLogin(),
+    carregarBracosLogin(),
+    carregarObservacoesLogin(),
+    carregarDivergenciasLogin()
+  ]);
 
+  registrarSnapshotsConfigLogin();
   popularDropdownUsuarios();
 })();
+
+// ==================== SNAPSHOTS DAS CONFIGS (tempo real) ====================
+function registrarSnapshotsConfigLogin() {
+  if (!fbDisponivel()) return;
+  fbOnSnapshotConfig('config', 'lojas', function (data) {
+    if (data && Array.isArray(data.dados) && data.dados.length > 0) {
+      lojasMercadoriasLogin = data.dados;
+    }
+    reRenderizarModalConfigAberto();
+  });
+  fbOnSnapshotConfig('config', 'bracos', function (data) {
+    if (data && data.dados && typeof data.dados === 'object' && Object.keys(data.dados).length > 0) {
+      bracosConfigLogin = data.dados;
+    }
+    reRenderizarModalConfigAberto();
+  });
+  fbOnSnapshotConfig('config', 'observacoes', function (data) {
+    if (data && data.dados !== undefined && data.dados !== null) {
+      observacoesCustomLogin = normalizarListaConfig(data.dados);
+    }
+    reRenderizarModalConfigAberto();
+  });
+  fbOnSnapshotConfig('config', 'divergencias', function (data) {
+    if (data && data.dados !== undefined && data.dados !== null) {
+      divergenciasCustomLogin = normalizarListaConfig(data.dados);
+    }
+    reRenderizarModalConfigAberto();
+  });
+}
+
+function reRenderizarModalConfigAberto() {
+  ['modalLojas', 'modalBracos', 'modalObservacoes', 'modalDivergencias'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el || !el.classList.contains('show')) return;
+    if (id === 'modalLojas') renderizarListaLojas();
+    else if (id === 'modalBracos') renderizarListaBracos();
+    else if (id === 'modalObservacoes') renderizarListaObservacoes();
+    else if (id === 'modalDivergencias') renderizarListaDivergencias();
+  });
+}

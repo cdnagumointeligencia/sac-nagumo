@@ -9,15 +9,13 @@ function getSetores() { return SETORES_CD1; }
 const TURNOS = ['', 'Manhã', 'Tarde', 'Noite'];
 const DIVERGENCIAS_CD1 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja'];
 function getDivergencias() {
-  const key = 'CD1';
-  if (typeof divergenciasCustom !== 'undefined' && divergenciasCustom[key] && Array.isArray(divergenciasCustom[key]) && divergenciasCustom[key].length > 0) return divergenciasCustom[key];
+  if (typeof divergenciasCustom !== 'undefined' && Array.isArray(divergenciasCustom) && divergenciasCustom.length > 0) return divergenciasCustom;
   return DIVERGENCIAS_CD1;
 }
 const OBSERVACOES_CD1 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar a próxima entrega'];
 function getObservacoes() {
-  const key = 'CD1';
-  if (typeof observacoesCustom !== 'undefined' && observacoesCustom[key] && Array.isArray(observacoesCustom[key]) && observacoesCustom[key].length > 0) {
-    return observacoesCustom[key];
+  if (typeof observacoesCustom !== 'undefined' && Array.isArray(observacoesCustom) && observacoesCustom.length > 0) {
+    return observacoesCustom;
   }
   return OBSERVACOES_CD1;
 }

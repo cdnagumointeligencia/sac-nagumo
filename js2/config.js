@@ -11,14 +11,14 @@ const TURNOS = ['', 'Manhã', 'Tarde', 'Noite'];
 const DIVERGENCIAS_CD1 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja'];
 const DIVERGENCIAS_CD2 = ['', 'Sobra', 'Falta', 'Inversão', 'Montada', 'Troca de loja', 'Não Checada', 'Agrupada', 'Aguardando Montagem'];
 function getDivergencias() {
-  if (typeof divergenciasCustom !== 'undefined' && divergenciasCustom['CD2'] && Array.isArray(divergenciasCustom['CD2']) && divergenciasCustom['CD2'].length > 0) return divergenciasCustom['CD2'];
+  if (typeof divergenciasCustom !== 'undefined' && Array.isArray(divergenciasCustom) && divergenciasCustom.length > 0) return divergenciasCustom;
   return DIVERGENCIAS_CD2;
 }
 const OBSERVACOES_CD1 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar a próxima entrega'];
 const OBSERVACOES_CD2 = ['', 'Solicitar nota de devolução', 'Devolver', 'Realizar Contagem', 'Pedir saldo lista.estoque', 'Solicitar NFD e devolver inversão', 'Solicitar NFD e Faturar inversão', 'Carregada-Enviar nota por e-mail', 'Faturar a sobra', 'Faturar a inversão', 'Aguardar próxima entrega'];
 function getObservacoes() {
-  if (typeof observacoesCustom !== 'undefined' && observacoesCustom['CD2'] && Array.isArray(observacoesCustom['CD2']) && observacoesCustom['CD2'].length > 0) {
-    return observacoesCustom['CD2'];
+  if (typeof observacoesCustom !== 'undefined' && Array.isArray(observacoesCustom) && observacoesCustom.length > 0) {
+    return observacoesCustom;
   }
   return OBSERVACOES_CD2;
 }
