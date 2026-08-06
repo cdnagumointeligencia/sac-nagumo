@@ -1476,27 +1476,8 @@ function diasUteisRanking(dataIni, dataFim) {
 }
 
 function abrirRanking() {
-  document.getElementById('rankingSenhaArea').style.display = 'block';
-  document.getElementById('rankingConteudo').style.display = 'none';
-  document.getElementById('rankingSenha').value = '';
-  document.getElementById('rankingSenhaErro').style.display = 'none';
   abrirModal('modalRanking');
-  setTimeout(function () { document.getElementById('rankingSenha').focus(); }, 100);
-}
-
-async function validarRanking() {
-  var senha = document.getElementById('rankingSenha').value;
-  var hashInput = await hashSenha(senha);
-  var hashAdmin = await hashSenha(ADMIN_SENHA);
-  if (hashInput === hashAdmin) {
-    document.getElementById('rankingSenhaArea').style.display = 'none';
-    document.getElementById('rankingConteudo').style.display = 'block';
-    gerarRanking();
-  } else {
-    document.getElementById('rankingSenhaErro').style.display = 'block';
-    document.getElementById('rankingSenha').value = '';
-    document.getElementById('rankingSenha').focus();
-  }
+  gerarRanking();
 }
 
 async function carregarChamadosMesRanking() {

@@ -1058,27 +1058,8 @@ function excluirDivergencia(idx) {
 
 // ==================== RANKING ====================
 function abrirRanking() {
-  document.getElementById('rankingSenhaArea').style.display = 'block';
-  document.getElementById('rankingConteudo').style.display = 'none';
-  document.getElementById('rankingSenha').value = '';
-  document.getElementById('rankingSenhaErro').style.display = 'none';
   abrirModal('modalRanking');
-  setTimeout(() => document.getElementById('rankingSenha').focus(), 100);
-}
-
-async function validarRanking() {
-  const senha = document.getElementById('rankingSenha').value;
-  const hashInput = await hashSenha(senha);
-  const hashAdmin = await hashSenha(SENHA_ADMIN);
-  if (hashInput === hashAdmin) {
-    document.getElementById('rankingSenhaArea').style.display = 'none';
-    document.getElementById('rankingConteudo').style.display = 'block';
-    gerarRanking();
-  } else {
-    document.getElementById('rankingSenhaErro').style.display = 'block';
-    document.getElementById('rankingSenha').value = '';
-    document.getElementById('rankingSenha').focus();
-  }
+  gerarRanking();
 }
 
 function gerarRanking() {

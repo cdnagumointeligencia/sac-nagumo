@@ -430,18 +430,7 @@
       <span class="modal-close" onclick="fecharModal('modalRanking')">&times;</span>
       <h3>&#127942; Ranking de Desempenho</h3>
 
-      <div id="rankingSenhaArea" class="ranking-senha-area">
-        <p style="font-size:0.82rem;color:#6b7280;margin-bottom:16px">Acesso restrito. Digite a senha de administrador.</p>
-        <input type="password" id="rankingSenha" class="modal-input" placeholder="Senha de administrador"
-          onkeypress="if(event.key==='Enter')validarRanking()">
-        <div id="rankingSenhaErro" style="color:var(--danger);text-align:center;display:none;font-size:0.82rem;margin-bottom:10px">Senha incorreta!</div>
-        <div class="modal-btns">
-          <button class="btn danger" onclick="fecharModal('modalRanking')">Cancelar</button>
-          <button class="btn success" onclick="validarRanking()">Confirmar</button>
-        </div>
-      </div>
-
-      <div id="rankingConteudo" style="display:none">
+      <div id="rankingConteudo">
         <div class="ranking-mes-label" id="rankingMesLabel"></div>
         <div id="rankingTabela"></div>
       </div>
