@@ -27,6 +27,11 @@
             <span class="config-label">Backup</span>
             <span class="config-desc">Exportar e importar backup completo do sistema</span>
           </div>
+          <div class="config-card" onclick="fecharModal('modalConfig');abrirRanking()">
+            <span class="config-icon">&#127942;</span>
+            <span class="config-label">Ranking</span>
+            <span class="config-desc">Desempenho dos usuários por chamados</span>
+          </div>
           <div class="config-card" onclick="fecharModal('modalConfig');abrirModalLojas()">
             <span class="config-icon">&#127970;</span>
             <span class="config-label">Lojas</span>

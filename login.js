@@ -1460,3 +1460,158 @@ function reRenderizarModalConfigAberto() {
     else if (id === 'modalDivergencias') renderizarListaDivergencias();
   });
 }
+
+// ==================== RANKING ====================
+function diasUteisRanking(dataIni, dataFim) {
+  var d1 = new Date(dataIni);
+  var d2 = new Date(dataFim);
+  if (isNaN(d1.getTime()) || isNaN(d2.getTime()) || d2 < d1) return 0;
+  var dias = 0;
+  var atual = new Date(d1);
+  while (atual <= d2) {
+    if (atual.getDay() !== 0) dias++;
+    atual.setDate(atual.getDate() + 1);
+  }
+  return dias;
+}
+
+function abrirRanking() {
+  document.getElementById('rankingSenhaArea').style.display = 'block';
+  document.getElementById('rankingConteudo').style.display = 'none';
+  document.getElementById('rankingSenha').value = '';
+  document.getElementById('rankingSenhaErro').style.display = 'none';
+  abrirModal('modalRanking');
+  setTimeout(function () { document.getElementById('rankingSenha').focus(); }, 100);
+}
+
+async function validarRanking() {
+  var senha = document.getElementById('rankingSenha').value;
+  var hashInput = await hashSenha(senha);
+  var hashAdmin = await hashSenha(ADMIN_SENHA);
+  if (hashInput === hashAdmin) {
+    document.getElementById('rankingSenhaArea').style.display = 'none';
+    document.getElementById('rankingConteudo').style.display = 'block';
+    gerarRanking();
+  } else {
+    document.getElementById('rankingSenhaErro').style.display = 'block';
+    document.getElementById('rankingSenha').value = '';
+    document.getElementById('rankingSenha').focus();
+  }
+}
+
+async function carregarChamadosMesRanking() {
+  var ano = new Date().getFullYear();
+  var mesNome = MESES[new Date().getMonth()];
+  var registros = [];
+
+  if (fbDisponivel()) {
+    var cds = ['CD1', 'CD2'];
+    for (var i = 0; i < cds.length; i++) {
+      try {
+        var resultados = await fbQuery('chamados', [
+          ['cd', '==', cds[i]],
+          ['ano', '==', ano],
+          ['ativo', '==', true]
+        ]);
+        resultados.forEach(function (r) {
+          if (r.mesNome === mesNome) {
+            registros.push({
+              chamado: r.chamado || '',
+              loja: r.loja || '',
+              usuario: r.usuario || '',
+              dataAbertura: r.dataAbertura || '',
+              dataFechamento: r.dataFechamento || ''
+            });
+          }
+        });
+      } catch (e) {}
+    }
+  }
+
+  if (registros.length === 0) {
+    ['CD1', 'CD2'].forEach(function (cd) {
+      try {
+        var arr = JSON.parse(localStorage.getItem('SAC_' + cd + '_dados')) || [];
+        arr.forEach(function (item) {
+          if (item && item.mes === mesNome && Array.isArray(item.registros)) {
+            item.registros.forEach(function (r) {
+              if (r && r.usuario) {
+                registros.push({
+                  chamado: r.chamado || '',
+                  loja: r.loja || '',
+                  usuario: r.usuario || '',
+                  dataAbertura: r.dataAbertura || '',
+                  dataFechamento: r.dataFechamento || ''
+                });
+              }
+            });
+          }
+        });
+      } catch (e) {}
+    });
+  }
+
+  return registros;
+}
+
+async function gerarRanking() {
+  var mesNome = MESES[new Date().getMonth()];
+  var ano = new Date().getFullYear();
+  document.getElementById('rankingMesLabel').textContent = 'Mês: ' + mesNome + ' ' + ano;
+
+  var regs = await carregarChamadosMesRanking();
+
+  var stats = {};
+  regs.forEach(function (r) {
+    var user = r.usuario;
+    if (!user) return;
+    if (!stats[user]) stats[user] = { total: 0, tempoSum: 0, tempoCount: 0 };
+    stats[user].total++;
+    if (r.dataAbertura && r.dataFechamento) {
+      var diff = diasUteisRanking(r.dataAbertura, r.dataFechamento);
+      if (diff >= 0) {
+        stats[user].tempoSum += diff;
+        stats[user].tempoCount++;
+      }
+    }
+  });
+
+  var ranking = Object.keys(stats).map(function (nome) {
+    return {
+      nome: nome,
+      total: stats[nome].total,
+      tempoMedio: stats[nome].tempoCount > 0 ? (stats[nome].tempoSum / stats[nome].tempoCount) : null
+    };
+  });
+  ranking.sort(function (a, b) { return b.total - a.total; });
+
+  var container = document.getElementById('rankingTabela');
+  if (ranking.length === 0) {
+    container.innerHTML = '<div class="ranking-vazio">Nenhum chamado com usuário definido neste mês.</div>';
+    return;
+  }
+
+  var totalGeral = ranking.reduce(function (s, r) { return s + r.total; }, 0);
+
+  var html = '<table class="ranking-table">';
+  html += '<thead><tr><th>#</th><th style="text-align:left;padding-left:14px">Usuário</th><th>Chamados</th><th>Média (dias úteis)</th></tr></thead>';
+  html += '<tbody>';
+  ranking.forEach(function (r, i) {
+    var pos = i + 1;
+    var cls = pos <= 3 ? ' rank-' + pos : '';
+    var medalha = pos === 1 ? '&#129351;' : pos === 2 ? '&#129352;' : pos === 3 ? '&#129353;' : pos;
+    var tempo = r.tempoMedio !== null ? r.tempoMedio.toFixed(1) + ' du' : '-';
+    html += '<tr class="' + cls + '">';
+    html += '<td class="rank-pos">' + medalha + '</td>';
+    html += '<td class="rank-user">' + escapeHtml(r.nome) + '</td>';
+    html += '<td class="rank-count">' + r.total + '</td>';
+    html += '<td class="rank-tempo">' + tempo + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  html += '<tfoot><tr><td></td><td style="text-align:left;padding-left:14px;font-weight:700">Total</td>';
+  html += '<td class="rank-count">' + totalGeral + '</td><td class="rank-tempo">-</td></tr></tfoot>';
+  html += '</table>';
+
+  container.innerHTML = html;
+}
