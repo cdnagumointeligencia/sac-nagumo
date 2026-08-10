@@ -356,6 +356,18 @@
           <div id="dashMercWrap">
             <header>
               <h1 class="dm-title">Mercadorias Sem Nota Fiscal — <span id="dmEmpresaLabel"></span></h1>
+              <div class="dm-filtro">
+                <button class="dm-f-chip" data-range="mes" onclick="definirPeriodoMerc('mes')">Este mês</button>
+                <button class="dm-f-chip" data-range="semana" onclick="definirPeriodoMerc('semana')">Esta semana</button>
+                <button class="dm-f-chip" data-range="7" onclick="definirPeriodoMerc('7')">Últimos 7 dias</button>
+                <button class="dm-f-chip" data-range="15" onclick="definirPeriodoMerc('15')">Últimos 15 dias</button>
+                <button class="dm-f-chip" data-range="30" onclick="definirPeriodoMerc('30')">Últimos 30 dias</button>
+                <span class="dm-f-sep">Período:</span>
+                <input type="date" id="dmFiltroInicio" onchange="aplicarFiltroPeriodoMerc()" title="Data início">
+                <span class="dm-f-between">até</span>
+                <input type="date" id="dmFiltroFim" onchange="aplicarFiltroPeriodoMerc()" title="Data fim">
+                <button class="dm-f-clear" onclick="limparFiltroPeriodoMerc()">Limpar</button>
+              </div>
             </header>
 
             <div class="dm-kpis" id="dmKpiRow"></div>

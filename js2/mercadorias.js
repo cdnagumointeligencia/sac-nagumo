@@ -2,6 +2,9 @@
 let dadosMercadoriasNF = [];
 let dashMercCD = 'CD1';
 let dashMercConferenteFiltro = '';
+let dashMercPeriodo = '';
+let dashMercDataInicio = '';
+let dashMercDataFim = '';
 const norm = s => (s || '').trim().toUpperCase();
 
 var _fbTimerMerc = null;
@@ -260,6 +263,7 @@ function adicionarMercadoriaNF() {
 function abrirDashboardMerc() {
   dashMercCD = cdAtual;
   dashMercConferenteFiltro = '';
+  resetarFiltroPeriodoMerc();
   DM_PALETTE = dashMercCD === 'CD2' ? DM_PALETTE_CD2 : ["#3CCBDB", "#D40138", "#5B8DEF", "#E8A33D", "#8BD450", "#C87CE8", "#FF6B6B", "#4ECDC4"];
   mudarPagina('dashboardMerc');
 }
@@ -267,9 +271,16 @@ function abrirDashboardMerc() {
 function renderizarDashboardMerc() {
   if (!dashMercCD) dashMercCD = cdAtual;
   const empresasCD = getEmpresasPorCD(dashMercCD);
-  const registros = (dadosMercadoriasNF || []).filter(d =>
-    empresasCD.includes(d.empresa) && extrairMesDeData(d.data) === mesAtualMercadoriasNF && extrairAnoDeData(d.data) === anoAtual
-  );
+  const registros = (dadosMercadoriasNF || []).filter(d => {
+    if (!empresasCD.includes(d.empresa)) return false;
+    if (dashMercDataInicio || dashMercDataFim) {
+      if (!d.data) return false;
+      if (dashMercDataInicio && d.data < dashMercDataInicio) return false;
+      if (dashMercDataFim && d.data > dashMercDataFim) return false;
+      return true;
+    }
+    return extrairMesDeData(d.data) === mesAtualMercadoriasNF && extrairAnoDeData(d.data) === anoAtual;
+  });
   document.getElementById('dmEmpresaLabel').innerHTML = escapeHtml(dashMercCD) + ' \u00b7 ' + MESES[(new Date()).getMonth()] + ' ' + (new Date()).getFullYear();
 
   if (registros.length === 0) {
@@ -435,4 +446,73 @@ function gerarPdfDashboardMerc() {
     document.title = titleBkp;
     document.body.classList.remove('dashmerc-printing');
   }, 300);
+}
+
+// ==================== FILTRO DE PERÍODO (DASHBOARD MERCADORIAS) ====================
+function formatarDataISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + dia;
+}
+
+function resetarFiltroPeriodoMerc() {
+  dashMercPeriodo = '';
+  dashMercDataInicio = '';
+  dashMercDataFim = '';
+  const elIni = document.getElementById('dmFiltroInicio');
+  const elFim = document.getElementById('dmFiltroFim');
+  if (elIni) elIni.value = '';
+  if (elFim) elFim.value = '';
+  atualizarChipsPeriodoMerc();
+}
+
+function definirPeriodoMerc(range) {
+  dashMercPeriodo = range;
+  const hoje = new Date();
+  if (range === 'mes') {
+    dashMercDataInicio = '';
+    dashMercDataFim = '';
+  } else if (range === 'semana') {
+    const diaSem = (hoje.getDay() + 6) % 7;
+    const seg = new Date(hoje);
+    seg.setDate(hoje.getDate() - diaSem);
+    const dom = new Date(seg);
+    dom.setDate(seg.getDate() + 6);
+    dashMercDataInicio = formatarDataISO(seg);
+    dashMercDataFim = formatarDataISO(dom);
+  } else {
+    const dias = parseInt(range, 10) || 7;
+    dashMercDataFim = formatarDataISO(hoje);
+    const ini = new Date(hoje);
+    ini.setDate(hoje.getDate() - (dias - 1));
+    dashMercDataInicio = formatarDataISO(ini);
+  }
+  const elIni = document.getElementById('dmFiltroInicio');
+  const elFim = document.getElementById('dmFiltroFim');
+  if (elIni) elIni.value = dashMercDataInicio;
+  if (elFim) elFim.value = dashMercDataFim;
+  atualizarChipsPeriodoMerc();
+  renderizarDashboardMerc();
+}
+
+function aplicarFiltroPeriodoMerc() {
+  dashMercPeriodo = '';
+  dashMercDataInicio = document.getElementById('dmFiltroInicio').value;
+  dashMercDataFim = document.getElementById('dmFiltroFim').value;
+  atualizarChipsPeriodoMerc();
+  renderizarDashboardMerc();
+}
+
+function limparFiltroPeriodoMerc() {
+  resetarFiltroPeriodoMerc();
+  renderizarDashboardMerc();
+}
+
+function atualizarChipsPeriodoMerc() {
+  const el = document.querySelector('.dm-filtro');
+  if (!el) return;
+  el.querySelectorAll('.dm-f-chip').forEach(function (chip) {
+    chip.classList.toggle('active', chip.dataset.range === dashMercPeriodo);
+  });
 }

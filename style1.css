@@ -888,7 +888,8 @@
       overflow: visible !important;
     }
     body.dashmerc-printing #dashMercWrap header button,
-    body.dashmerc-printing .page-actions { display: none !important; }
+    body.dashmerc-printing .page-actions,
+    body.dashmerc-printing .dm-filtro { display: none !important; }
     body.dashmerc-printing .page-layout { max-width: 100%; display: block; }
     body.dashmerc-printing .page-main { max-width: 100%; }
     body.dashmerc-printing .dm-kpis { page-break-inside: avoid; }
@@ -1211,6 +1212,35 @@
   #pageDashboardMerc .dm-chip.active {
     background: var(--dash-amber); border-color: var(--dash-amber); color: var(--primary-deep); font-weight: 700;
   }
+
+  #pageDashboardMerc .dm-filtro {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 12px;
+  }
+  #pageDashboardMerc .dm-f-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .3px;
+    padding: 5px 10px; border-radius: 20px; border: 1px solid var(--dash-line);
+    background: var(--dash-panel-2); color: var(--dash-text-dim); cursor: pointer;
+    transition: all .15s; user-select: none;
+  }
+  #pageDashboardMerc .dm-f-chip:hover { border-color: var(--secondary); color: var(--dash-text); }
+  #pageDashboardMerc .dm-f-chip.active {
+    background: var(--dash-amber); border-color: var(--dash-amber); color: var(--primary-deep); font-weight: 700;
+  }
+  #pageDashboardMerc .dm-f-sep,
+  #pageDashboardMerc .dm-f-between {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--dash-text-dim);
+  }
+  #pageDashboardMerc .dm-filtro input[type="date"] {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 4px 6px; border: 1px solid var(--dash-line); border-radius: 6px;
+    background: var(--dash-panel-2); color: var(--dash-text); outline: none;
+  }
+  #pageDashboardMerc .dm-f-clear {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .3px;
+    padding: 5px 10px; border-radius: 6px; border: 1px solid var(--dash-line);
+    background: transparent; color: var(--dash-text-dim); cursor: pointer; transition: all .15s;
+  }
+  #pageDashboardMerc .dm-f-clear:hover { border-color: #D40138; color: #D40138; }
 
   #pageDashboardMerc .dm-rank-list { display: flex; flex-direction: column; gap: 8px; max-height: 38vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--dash-line) transparent; }
   #pageDashboardMerc .dm-rank-list::-webkit-scrollbar { width: 5px; }
