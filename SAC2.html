@@ -56,6 +56,10 @@
           <label>Loja</label>
           <input type="text" id="fLoja" oninput="aplicarFiltros()" placeholder="Buscar...">
         </div>
+        <div class="filter-group">
+          <label>Divergência</label>
+          <select id="fDivergencia" onchange="aplicarFiltros()"><option value="">Todos</option></select>
+        </div>
         <div class="filter-group" style="display:flex; align-items:end; gap:6px;">
           <button class="btn danger" onclick="limparFiltros()">Limpar</button>
           <button class="btn" onclick="toggleFiltros()" title="Fechar filtros" style="background:#374151;padding:8px 10px;">&#10005;</button>

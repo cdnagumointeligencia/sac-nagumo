@@ -498,10 +498,13 @@ function toggleFiltros() {
 function popularFiltros() {
   const selUser = document.getElementById('fUsuario');
   const selSetor = document.getElementById('fSetor');
+  const selDivergencia = document.getElementById('fDivergencia');
   const valUser = selUser.value;
   const valSetor = selSetor.value;
+  const valDivergencia = selDivergencia.value;
   selUser.innerHTML = '<option value="">Todos</option>';
   selSetor.innerHTML = '<option value="">Todos</option>';
+  selDivergencia.innerHTML = '<option value="">Todos</option>';
   usuarios.forEach(u => {
     const o = document.createElement('option');
     o.value = u; o.textContent = u;
@@ -512,13 +515,20 @@ function popularFiltros() {
     o.value = s; o.textContent = s;
     selSetor.appendChild(o);
   });
+  getDivergencias().filter(d => d).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    selDivergencia.appendChild(o);
+  });
   selUser.value = valUser;
   selSetor.value = valSetor;
+  selDivergencia.value = valDivergencia;
 }
 
 function aplicarFiltros() {
   const fUser = document.getElementById('fUsuario').value;
   const fSetor = document.getElementById('fSetor').value;
+  const fDivergencia = document.getElementById('fDivergencia').value;
   const fDataInicio = document.getElementById('fDataInicio').value;
   const fDataFim = document.getElementById('fDataFim').value;
   const fChamado = document.getElementById('fChamado').value.toLowerCase();
@@ -531,6 +541,7 @@ function aplicarFiltros() {
     let mostrar = true;
     if (fUser && d.usuario !== fUser) mostrar = false;
     if (fSetor && d.setor !== fSetor) mostrar = false;
+    if (fDivergencia && d.divergencia !== fDivergencia) mostrar = false;
     if (fDataInicio && d.dataAbertura && d.dataAbertura < fDataInicio) mostrar = false;
     if (fDataFim && d.dataAbertura && d.dataAbertura > fDataFim) mostrar = false;
     if (fChamado && !(d.chamado || '').toLowerCase().includes(fChamado)) mostrar = false;
@@ -549,6 +560,7 @@ function aplicarFiltros() {
 function limparFiltros() {
   document.getElementById('fUsuario').value = '';
   document.getElementById('fSetor').value = '';
+  document.getElementById('fDivergencia').value = '';
   document.getElementById('fChamado').value = '';
   document.getElementById('fLoja').value = '';
   definirDatasFiltro();
