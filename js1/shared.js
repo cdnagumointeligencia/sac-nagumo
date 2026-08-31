@@ -528,6 +528,27 @@ function popularFiltros() {
   selDivergencia.value = valDivergencia;
 }
 
+function parseDataFiltro(valor) {
+  if (!valor) return NaN;
+  const v = String(valor).trim();
+  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(v);
+  if (m) return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)).getTime();
+  m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(v);
+  if (m) {
+    let a = parseInt(m[3], 10);
+    if (a < 100) a += a >= 70 ? 1900 : 2000;
+    return new Date(a, parseInt(m[2], 10) - 1, parseInt(m[1], 10)).getTime();
+  }
+  m = /^(\d{1,2})-(\d{1,2})-(\d{2,4})/.exec(v);
+  if (m) {
+    let a = parseInt(m[3], 10);
+    if (a < 100) a += a >= 70 ? 1900 : 2000;
+    return new Date(a, parseInt(m[2], 10) - 1, parseInt(m[1], 10)).getTime();
+  }
+  const t = new Date(v).getTime();
+  return isNaN(t) ? NaN : t;
+}
+
 function aplicarFiltros() {
   const fUser = document.getElementById('fUsuario').value;
   const fSetor = document.getElementById('fSetor').value;
@@ -536,6 +557,9 @@ function aplicarFiltros() {
   const fDataFim = document.getElementById('fDataFim').value;
   const fChamado = document.getElementById('fChamado').value.toLowerCase();
   const fLoja = document.getElementById('fLoja').value.toLowerCase();
+  const tIni = parseDataFiltro(fDataInicio);
+  const tFim = parseDataFiltro(fDataFim);
+  const temDataFiltro = !isNaN(tIni) || !isNaN(tFim);
   const todos = dadosMes[mesAtual] || [];
   const filtrados = [];
   todos.forEach((d, originalIdx) => {
@@ -543,10 +567,17 @@ function aplicarFiltros() {
     if (fUser && d.usuario !== fUser) mostrar = false;
     if (fSetor && d.setor !== fSetor) mostrar = false;
     if (fDivergencia && d.divergencia !== fDivergencia) mostrar = false;
-    if (fDataInicio && d.dataAbertura && d.dataAbertura < fDataInicio) mostrar = false;
-    if (fDataFim && d.dataAbertura && d.dataAbertura > fDataFim) mostrar = false;
     if (fChamado && !(d.chamado || '').toLowerCase().includes(fChamado)) mostrar = false;
     if (fLoja && !(d.loja || '').toLowerCase().includes(fLoja)) mostrar = false;
+    if (temDataFiltro) {
+      const tAbertura = parseDataFiltro(d.dataAbertura);
+      if (isNaN(tAbertura)) {
+        mostrar = false;
+      } else {
+        if (!isNaN(tIni) && tAbertura < tIni) mostrar = false;
+        if (!isNaN(tFim) && tAbertura > tFim) mostrar = false;
+      }
+    }
     if (mostrar) filtrados.push({ data: d, originalIdx: originalIdx });
   });
   dadosFiltrados = filtrados;
