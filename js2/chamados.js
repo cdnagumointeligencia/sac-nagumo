@@ -83,7 +83,15 @@ function selecionarMesDash(mes) {
 function renderizarTabela() {
   const tbody = document.querySelector('#tabela tbody');
   tbody.innerHTML = '';
-  const registros = dadosMes[mesAtual] || [];
+  const todos = dadosMes[mesAtual] || [];
+  let registros, indicesOriginais;
+  if (filtrosAtivos && dadosFiltrados !== null) {
+    registros = dadosFiltrados.map(function(f) { return f.data; });
+    indicesOriginais = dadosFiltrados.map(function(f) { return f.originalIdx; });
+  } else {
+    registros = todos;
+    indicesOriginais = todos.map(function(_, i) { return i; });
+  }
   if (registros.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
@@ -92,7 +100,7 @@ function renderizarTabela() {
     td.style.padding = '32px';
     td.style.color = 'var(--text-dim)';
     td.style.fontSize = '13px';
-    td.textContent = 'Nenhum chamado neste mês. Clique em "+ Chamado" para começar.';
+    td.textContent = filtrosAtivos ? 'Nenhum chamado encontrado com os filtros aplicados.' : 'Nenhum chamado neste mês. Clique em "+ Chamado" para começar.';
     tr.appendChild(td);
     tbody.appendChild(tr);
     document.getElementById('chamadosPaginacao').innerHTML = '';
@@ -104,9 +112,10 @@ function renderizarTabela() {
   const fim = registros.length - 1 - (paginaChamados * CHAMADOS_POR_PAGINA);
   const inicio = Math.max(-1, fim - CHAMADOS_POR_PAGINA + 1);
   for (let i = fim; i > inicio; i--) {
-    tbody.appendChild(criarLinha(registros[i], i));
+    tbody.appendChild(criarLinha(registros[i], indicesOriginais[i]));
   }
   const pagEl = document.getElementById('chamadosPaginacao');
+  const totalRegistros = filtrosAtivos ? dadosFiltrados.length : todos.length;
   if (totalPaginas > 1) {
     pagEl.innerHTML = '<button class="btn" style="padding:3px 8px;font-size:11px" onclick="paginaChamados=0;renderizarTabela()" ' + (paginaChamados === 0 ? 'disabled' : '') + '>&laquo;</button>' +
       '<button class="btn" style="padding:3px 8px;font-size:11px" onclick="paginaChamados--;renderizarTabela()" ' + (paginaChamados === 0 ? 'disabled' : '') + '>&lsaquo;</button>' +

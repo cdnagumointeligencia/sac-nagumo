@@ -483,6 +483,9 @@ function configurarSnapshots() {
 }
 
 // ==================== FILTROS ====================
+let dadosFiltrados = null;
+let filtrosAtivos = false;
+
 function definirDatasFiltro() {
   const hoje = new Date();
   const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -533,11 +536,9 @@ function aplicarFiltros() {
   const fDataFim = document.getElementById('fDataFim').value;
   const fChamado = document.getElementById('fChamado').value.toLowerCase();
   const fLoja = document.getElementById('fLoja').value.toLowerCase();
-  const linhas = document.querySelectorAll('#tabela tbody tr');
-  let visiveis = 0;
-  linhas.forEach(tr => {
-    const idx = parseInt(tr.dataset.idx);
-    const d = dadosMes[mesAtual][idx];
+  const todos = dadosMes[mesAtual] || [];
+  const filtrados = [];
+  todos.forEach((d, originalIdx) => {
     let mostrar = true;
     if (fUser && d.usuario !== fUser) mostrar = false;
     if (fSetor && d.setor !== fSetor) mostrar = false;
@@ -546,12 +547,15 @@ function aplicarFiltros() {
     if (fDataFim && d.dataAbertura && d.dataAbertura > fDataFim) mostrar = false;
     if (fChamado && !(d.chamado || '').toLowerCase().includes(fChamado)) mostrar = false;
     if (fLoja && !(d.loja || '').toLowerCase().includes(fLoja)) mostrar = false;
-    tr.style.display = mostrar ? '' : 'none';
-    if (mostrar) visiveis++;
+    if (mostrar) filtrados.push({ data: d, originalIdx: originalIdx });
   });
+  dadosFiltrados = filtrados;
+  filtrosAtivos = true;
+  paginaChamados = 0;
+  renderizarTabela();
   const status = document.getElementById('filterStatus');
-  if (visiveis < linhas.length) {
-    status.textContent = `Mostrando ${visiveis} de ${linhas.length} registros`;
+  if (filtrados.length < todos.length) {
+    status.textContent = `Mostrando ${filtrados.length} de ${todos.length} registros`;
   } else {
     status.textContent = '';
   }
@@ -565,7 +569,10 @@ function limparFiltros() {
   document.getElementById('fLoja').value = '';
   definirDatasFiltro();
   document.getElementById('filterStatus').textContent = '';
-  document.querySelectorAll('#tabela tbody tr').forEach(tr => tr.style.display = '');
+  dadosFiltrados = null;
+  filtrosAtivos = false;
+  paginaChamados = 0;
+  renderizarTabela();
 }
 
 // ==================== BRAÇOS ====================
