@@ -487,23 +487,9 @@ function configurarSnapshots() {
 let dadosFiltrados = null;
 let filtrosAtivos = false;
 
-function formatDateInput(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const dia = String(d.getDate()).padStart(2, '0');
-  return y + '-' + m + '-' + dia;
-}
-
-function definirDatasFiltro() {
-  const hoje = new Date();
-  const mi = MESES.indexOf(mesAtual);
-  const mesRef = mi >= 0 ? mi : hoje.getMonth();
-  const anoRef = anoAtual || hoje.getFullYear();
-  const inicio = new Date(anoRef, mesRef, 1);
-  let fim = new Date(anoRef, mesRef + 1, 0);
-  if (anoRef === hoje.getFullYear() && mesRef === hoje.getMonth()) fim = hoje;
-  document.getElementById('fDataInicio').value = formatDateInput(inicio);
-  document.getElementById('fDataFim').value = formatDateInput(fim);
+function limparDatasFiltro() {
+  document.getElementById('fDataInicio').value = '';
+  document.getElementById('fDataFim').value = '';
 }
 
 function toggleFiltros() {
@@ -615,7 +601,7 @@ function limparFiltros() {
   document.getElementById('fDivergencia').value = '';
   document.getElementById('fChamado').value = '';
   document.getElementById('fLoja').value = '';
-  definirDatasFiltro();
+  limparDatasFiltro();
   document.getElementById('filterStatus').textContent = '';
   dadosFiltrados = null;
   filtrosAtivos = false;
@@ -1259,7 +1245,7 @@ async function iniciarSistema() {
   montarAbas();
   selecionarMes(mesAtual);
   montarAbasGenerico('tabsMesDash', mesAtualDash, selecionarMesDash);
-  definirDatasFiltro();
+  limparDatasFiltro();
   if (paginaAtual !== 'chamados') mudarPagina('chamados');
   document.getElementById('tituloPagina').textContent = 'Acompanhamento de Chamados CD1';
 }

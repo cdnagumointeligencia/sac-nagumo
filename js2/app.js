@@ -72,7 +72,7 @@ document.addEventListener('input', function(e) {
     montarAbas();
     selecionarMes(mesAtual);
     montarAbasGenerico('tabsMesDash', mesAtualDash, selecionarMesDash);
-    definirDatasFiltro();
+    limparDatasFiltro();
     if (paginaAtual !== 'chamados') mudarPagina('chamados');
     atualizarBarraUsuario();
     document.getElementById('tituloPagina').textContent = 'Acompanhamento de Chamados CD2';

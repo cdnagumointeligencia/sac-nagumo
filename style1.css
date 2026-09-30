@@ -232,9 +232,6 @@
     }
     .tabs button:hover:not(.active) { background: rgba(2,54,101,0.06); border-color: var(--border-strong); }
 
-    .totais-info { display: none !important; }
-    #chamadosPaginacao { display: none !important; }
-
     .page { display: none; }
     .page.active { display: block; animation: fadeIn 0.25s var(--ease); }
     #pageDashboard.active { height: 100vh; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--dash-line) transparent; }
