@@ -284,6 +284,7 @@ function montarAbas() {
 
 async function selecionarMes(mes) {
   mesAtual = mes;
+  idxChamadoNovo = -1;
   document.querySelectorAll('#tabsMes button').forEach(b => {
     b.classList.toggle('active', b.textContent === mes.slice(0, 3));
   });

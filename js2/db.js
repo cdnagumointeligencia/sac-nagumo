@@ -154,6 +154,7 @@ async function fbCarregarChamados() {
       if (_chamadosInicialResolve) {
         var r = _chamadosInicialResolve;
         _chamadosInicialResolve = null;
+        idxChamadoNovo = -1;
         r(Object.keys(fbDadosMes).length > 0);
       } else {
         if (paginaAtual === 'chamados') {

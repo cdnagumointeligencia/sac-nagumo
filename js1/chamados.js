@@ -76,8 +76,12 @@ function selecionarMesDash(mes) {
 }
 
 // ==================== TABELA ====================
+let idxChamadoNovo = -1;
+
 function ordenarIndicesPorDataFechamento(lista, base) {
   return lista.slice().sort(function (a, b) {
+    if (a === idxChamadoNovo) return -1;
+    if (b === idxChamadoNovo) return 1;
     const ta = parseDataFiltro(base[a].dataFechamento);
     const tb = parseDataFiltro(base[b].dataFechamento);
     const va = isNaN(ta);
@@ -455,17 +459,18 @@ function adicionarChamado() {
   }
   const hoje = new Date().toISOString().split('T')[0];
   const id = Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5);
-  dadosMes[mesAtual].push({
+  dadosMes[mesAtual].unshift({
     id, chamado: '', loja: '', braco: '', turno: '', setor: '',
     plu: '', divergencia: '', observacao: '', obsTexto: '', conferente: '', usuario: usuarioLogado || '',
     dataAbertura: '', dataFechamento: hoje
   });
+  idxChamadoNovo = 0;
   salvarDadosMes();
   renderizarTabela();
   atualizarTotais();
   toast('Chamado adicionado', 'success');
   const table = document.querySelector('.table-wrap');
-  setTimeout(() => table.scrollTop = table.scrollHeight, 100);
+  setTimeout(() => table.scrollTop = 0, 100);
 }
 
 // ==================== TOTAIS ====================
