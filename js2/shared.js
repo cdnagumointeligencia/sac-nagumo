@@ -571,9 +571,7 @@ function aplicarFiltros() {
     if (fLoja && !(d.loja || '').toLowerCase().includes(fLoja)) mostrar = false;
     if (temDataFiltro) {
       const tAbertura = parseDataFiltro(d.dataAbertura);
-      if (isNaN(tAbertura)) {
-        mostrar = false;
-      } else {
+      if (!isNaN(tAbertura)) {
         if (!isNaN(tIni) && tAbertura < tIni) mostrar = false;
         if (!isNaN(tFim) && tAbertura > tFim) mostrar = false;
       }
