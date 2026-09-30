@@ -76,6 +76,21 @@ function selecionarMesDash(mes) {
 }
 
 // ==================== TABELA ====================
+function ordenarIndicesPorDataFechamento(lista, base) {
+  return lista.slice().sort(function (a, b) {
+    const ta = parseDataFiltro(base[a].dataFechamento);
+    const tb = parseDataFiltro(base[b].dataFechamento);
+    const va = isNaN(ta);
+    const vb = isNaN(tb);
+    if (va !== vb) return va ? 1 : -1;
+    if (!va && tb !== ta) return tb - ta;
+    const na = parseInt(base[a].chamado, 10);
+    const nb = parseInt(base[b].chamado, 10);
+    if (!isNaN(na) && !isNaN(nb) && na !== nb) return nb - na;
+    return 0;
+  });
+}
+
 function renderizarTabela() {
   const tbody = document.querySelector('#tabela tbody');
   tbody.innerHTML = '';
@@ -106,10 +121,11 @@ function renderizarTabela() {
   const totalPaginas = Math.ceil(registros.length / CHAMADOS_POR_PAGINA);
   if (paginaChamados >= totalPaginas) paginaChamados = totalPaginas - 1;
   if (paginaChamados < 0) paginaChamados = 0;
-  const fim = registros.length - 1 - (paginaChamados * CHAMADOS_POR_PAGINA);
-  const inicio = Math.max(-1, fim - CHAMADOS_POR_PAGINA + 1);
-  for (let i = fim; i > inicio; i--) {
-    tbody.appendChild(criarLinha(registros[i], indicesOriginais[i]));
+  const ordem = ordenarIndicesPorDataFechamento(indicesOriginais, todos);
+  const inicio = paginaChamados * CHAMADOS_POR_PAGINA;
+  const fim = Math.min(ordem.length, inicio + CHAMADOS_POR_PAGINA);
+  for (let i = inicio; i < fim; i++) {
+    tbody.appendChild(criarLinha(todos[ordem[i]], ordem[i]));
   }
   const pagEl = document.getElementById('chamadosPaginacao');
   const totalRegistros = filtrosAtivos ? dadosFiltrados.length : todos.length;
@@ -449,7 +465,7 @@ function adicionarChamado() {
   atualizarTotais();
   toast('Chamado adicionado', 'success');
   const table = document.querySelector('.table-wrap');
-  setTimeout(() => table.scrollTop = 0, 100);
+  setTimeout(() => table.scrollTop = table.scrollHeight, 100);
 }
 
 // ==================== TOTAIS ====================
