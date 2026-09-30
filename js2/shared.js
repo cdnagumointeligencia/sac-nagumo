@@ -507,8 +507,14 @@ function definirDatasFiltro() {
 }
 
 function toggleFiltros() {
-  document.getElementById('filterPanel').classList.toggle('show');
-  popularFiltros();
+  const panel = document.getElementById('filterPanel');
+  const estavaAberto = panel.classList.contains('show');
+  panel.classList.toggle('show');
+  if (estavaAberto) {
+    limparFiltros();
+  } else {
+    popularFiltros();
+  }
 }
 
 function popularFiltros() {
