@@ -54,6 +54,14 @@ function normalizarRegistros(registros) {
   return [];
 }
 
+function dadosMesArray(mes) {
+  var m = mes || mesAtual;
+  if (!dadosMes[m] || !Array.isArray(dadosMes[m])) {
+    dadosMes[m] = normalizarRegistros(dadosMes[m]);
+  }
+  return dadosMes[m];
+}
+
 // ==================== FIRESTORE SYNC HELPERS ====================
 function gerarId() {
   return Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);

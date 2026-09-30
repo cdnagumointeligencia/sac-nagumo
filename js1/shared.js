@@ -292,6 +292,7 @@ async function selecionarMes(mes) {
     dadosMes[mesAtual] = [];
     await salvarDadosMes();
   }
+  dadosMesArray(mesAtual);
   renderizarTabela();
   atualizarTotais();
   limparFiltros();
@@ -486,11 +487,23 @@ function configurarSnapshots() {
 let dadosFiltrados = null;
 let filtrosAtivos = false;
 
+function formatDateInput(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + dia;
+}
+
 function definirDatasFiltro() {
   const hoje = new Date();
-  const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  document.getElementById('fDataInicio').value = formatDate(inicio);
-  document.getElementById('fDataFim').value = formatDate(hoje);
+  const mi = MESES.indexOf(mesAtual);
+  const mesRef = mi >= 0 ? mi : hoje.getMonth();
+  const anoRef = anoAtual || hoje.getFullYear();
+  const inicio = new Date(anoRef, mesRef, 1);
+  let fim = new Date(anoRef, mesRef + 1, 0);
+  if (anoRef === hoje.getFullYear() && mesRef === hoje.getMonth()) fim = hoje;
+  document.getElementById('fDataInicio').value = formatDateInput(inicio);
+  document.getElementById('fDataFim').value = formatDateInput(fim);
 }
 
 function toggleFiltros() {
@@ -560,7 +573,7 @@ function aplicarFiltros() {
   const tIni = parseDataFiltro(fDataInicio);
   const tFim = parseDataFiltro(fDataFim);
   const temDataFiltro = !isNaN(tIni) || !isNaN(tFim);
-  const todos = dadosMes[mesAtual] || [];
+  const todos = dadosMesArray(mesAtual);
   const filtrados = [];
   todos.forEach((d, originalIdx) => {
     let mostrar = true;
@@ -570,10 +583,10 @@ function aplicarFiltros() {
     if (fChamado && !(d.chamado || '').toLowerCase().includes(fChamado)) mostrar = false;
     if (fLoja && !(d.loja || '').toLowerCase().includes(fLoja)) mostrar = false;
     if (temDataFiltro) {
-      const tAbertura = parseDataFiltro(d.dataAbertura);
-      if (!isNaN(tAbertura)) {
-        if (!isNaN(tIni) && tAbertura < tIni) mostrar = false;
-        if (!isNaN(tFim) && tAbertura > tFim) mostrar = false;
+      const tFechamento = parseDataFiltro(d.dataFechamento);
+      if (!isNaN(tFechamento)) {
+        if (!isNaN(tIni) && tFechamento < tIni) mostrar = false;
+        if (!isNaN(tFim) && tFechamento > tFim) mostrar = false;
       }
     }
     if (mostrar) filtrados.push({ data: d, originalIdx: originalIdx });
@@ -1111,7 +1124,7 @@ function abrirRanking() {
 }
 
 function gerarRanking() {
-  const regs = dadosMes[mesAtual] || [];
+  const regs = dadosMesArray(mesAtual);
   const labelMes = mesAtual + ' ' + new Date().getFullYear();
   document.getElementById('rankingMesLabel').textContent = 'Mês: ' + labelMes;
 

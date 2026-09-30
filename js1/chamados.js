@@ -79,7 +79,7 @@ function selecionarMesDash(mes) {
 function renderizarTabela() {
   const tbody = document.querySelector('#tabela tbody');
   tbody.innerHTML = '';
-  const todos = dadosMes[mesAtual] || [];
+  const todos = dadosMesArray(mesAtual);
   let registros, indicesOriginais;
   if (filtrosAtivos && dadosFiltrados !== null) {
     registros = dadosFiltrados.map(function(f) { return f.data; });
@@ -88,6 +88,7 @@ function renderizarTabela() {
     registros = todos;
     indicesOriginais = todos.map(function(_, i) { return i; });
   }
+  if (!Array.isArray(registros)) registros = [];
   if (registros.length === 0) {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
@@ -428,7 +429,7 @@ function atualizarUsuarioNotaDev(chamado, loja, usuario) {
 
 // ==================== ADICIONAR CHAMADO ====================
 function adicionarChamado() {
-  const regs = dadosMes[mesAtual] || [];
+  const regs = dadosMesArray(mesAtual);
   if (regs.length > 0) {
     const ultimo = regs[regs.length - 1];
     if (!ultimo.chamado || !ultimo.loja) {
@@ -453,7 +454,7 @@ function adicionarChamado() {
 
 // ==================== TOTAIS ====================
 function atualizarTotais() {
-  const regs = dadosMes[mesAtual] || [];
+  const regs = dadosMesArray(mesAtual);
   const total = regs.length;
   const abertos = regs.filter(r => !r.dataFechamento).length;
   const fechados = regs.filter(r => r.dataFechamento).length;
