@@ -1,31 +1,50 @@
-# Firebase config (if .env or similar is added later)
+# O repositorio publica a pagina online (GitHub Pages).
+# Entra no GitHub apenas o que o site carrega:
+#   index.html, login.js, modal-config.*, style-index.css,
+#   SAC1.html + style1.css + js1/, SAC2.html + style2.css + js2/
+# Todo o resto fica só na maquina.
+
+# ==================== DOCUMENTACAO LOCAL ====================
+*.md
+!README.md
+
+# ==================== CONFIG DO BACKEND FIREBASE ====================
+# firestore.rules, firestore.indexes.json e firebase.json
+# sao usados no deploy do Firebase, nao pela pagina.
+firebase.json
+firestore.rules
+firestore.indexes.json
+
+# ==================== CODIGO MORTO ====================
+# Nenhuma pagina carrega js1/produtividade.js: o CD1 nao usa
+# produtividade e a aba e oculta por CSS (.cd2-only).
+js1/produtividade.js
+
+# ==================== CONVERSAS E NOTAS ====================
+conversas/
+link.txt
+backup_*/
+
+# ==================== FIREBASE / ENV ====================
 .env
 .env.local
 firebase-debug.log
+ui-debug.log
+*-debug.log
 
-# OS files
+# ==================== SISTEMA OPERACIONAL ====================
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# IDE
+# ==================== EDITORES ====================
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 
-# Playwright test artifacts
+# ==================== ARTEFATOS DE TESTE ====================
 .playwright-mcp/
-
-# Conversas locais (nao vao para o GitHub)
-conversas/
-
-# Regras de negocio (local, nao vai para o GitHub)
-regras do negócio.md
-
-# Link do site online (local, nao vai para o GitHub)
-link.txt
-
-# Backups locais (nao vao para o GitHub)
-backup_*/
+test-results/
+playwright-report/
